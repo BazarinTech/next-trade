@@ -1,0 +1,5 @@
+@extends('errors.layout')
+@section('code', '419')
+@section('color', 'text-amber-400')
+@section('title', 'Session Expired')
+@section('description', 'Your session has expired. Please refresh the page and try again.')

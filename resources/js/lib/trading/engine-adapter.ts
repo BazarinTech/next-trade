@@ -1,0 +1,211 @@
+import { CandleBuilder } from './candle-builder';
+import type {
+    IEngineAdapter,
+    OHLCCandle,
+    PlaceTradeParams,
+    PriceTick,
+    TickCallback,
+    Timeframe,
+    Trade,
+    TradeCallback,
+} from './chart-types';
+
+/**
+ * Adapter between the React chart layer and the existing PHP trading engine.
+ *
+ * - Polls /trade/assets/{id}/ticks every 3 s (matching the tick generator)
+ * - Polls /trade/active every 5 s to detect settlements
+ * - Exposes subscribeToTicks / subscribeToTrades for component-level subscriptions
+ * - placeTrade calls the existing POST /trade/place endpoint
+ */
+class NextTradeEngineAdapter implements IEngineAdapter {
+    private readonly tickSubs  = new Set<TickCallback>();
+    private readonly tradeSubs = new Set<TradeCallback>();
+
+    private active:    Trade[] = [];
+    private completed: Trade[] = [];
+
+    private assetId:       number | null = null;
+    private lastTickTime:  string | null = null;
+
+    private tickTimer:  ReturnType<typeof setInterval> | null = null;
+    private tradeTimer: ReturnType<typeof setInterval> | null = null;
+
+    // ─── Bootstrap ───────────────────────────────────────────────────────────
+
+    setInitialTrades(active: Trade[], completed: Trade[]): void {
+        this.active    = active;
+        this.completed = completed;
+    }
+
+    // ─── Asset selection ─────────────────────────────────────────────────────
+
+    setAsset(assetId: number): void {
+        this.assetId      = assetId;
+        this.lastTickTime = null;
+        this.startTickPolling();
+    }
+
+    // ─── Historical data ──────────────────────────────────────────────────────
+
+    async getHistoricalTicks(assetId: number): Promise<PriceTick[]> {
+        try {
+            const res = await fetch(`/trade/assets/${assetId}/ticks`, {
+                credentials: 'same-origin',
+            });
+            if (!res.ok) return [];
+            const raw: Array<{ price: number | string; time: string; direction?: string }> =
+                await res.json();
+            if (!Array.isArray(raw)) return [];
+            return raw.map(t => ({
+                price:     Number(t.price),
+                time:      t.time,
+                direction: (t.direction as PriceTick['direction']) ?? 'flat',
+            }));
+        } catch {
+            return [];
+        }
+    }
+
+    async getHistoricalCandles(assetId: number, timeframe: Timeframe): Promise<OHLCCandle[]> {
+        const ticks = await this.getHistoricalTicks(assetId);
+        const builder = new CandleBuilder(timeframe);
+        return builder.loadHistoricalTicks(ticks);
+    }
+
+    // ─── Subscriptions ────────────────────────────────────────────────────────
+
+    subscribeToTicks(cb: TickCallback): () => void {
+        this.tickSubs.add(cb);
+        return () => this.tickSubs.delete(cb);
+    }
+
+    subscribeToTrades(cb: TradeCallback): () => void {
+        this.tradeSubs.add(cb);
+        return () => this.tradeSubs.delete(cb);
+    }
+
+    getActiveTrades():    Trade[] { return [...this.active]; }
+    getCompletedTrades(): Trade[] { return [...this.completed]; }
+
+    // ─── Trade placement ──────────────────────────────────────────────────────
+
+    async placeTrade(params: PlaceTradeParams): Promise<{ trade: Trade; walletBalance: number }> {
+        const res = await fetch('/trade/place', {
+            method: 'POST',
+            headers: {
+                'Content-Type':  'application/json',
+                'X-CSRF-TOKEN':  this.csrfToken(),
+                'Accept':        'application/json',
+            },
+            body: JSON.stringify({
+                asset_id:       params.assetId,
+                direction:      params.direction,
+                amount:         params.stake,
+                expiry_seconds: params.expirySeconds,
+            }),
+        });
+
+        const data = await res.json();
+        if (!data.success) throw new Error(data.message ?? 'Trade placement failed');
+
+        // Optimistically update local state
+        this.active = [...this.active, data.trade as Trade];
+        this.notifyTrades();
+
+        return { trade: data.trade as Trade, walletBalance: data.wallet_balance as number };
+    }
+
+    // ─── Trade polling ────────────────────────────────────────────────────────
+
+    startTradePolling(): void {
+        if (this.tradeTimer) clearInterval(this.tradeTimer);
+        const poll = () => this.pollTrades();
+        poll();
+        this.tradeTimer = setInterval(poll, 5000);
+    }
+
+    stopTradePolling(): void {
+        if (this.tradeTimer) { clearInterval(this.tradeTimer); this.tradeTimer = null; }
+    }
+
+    private async pollTrades(): Promise<void> {
+        try {
+            const res  = await fetch('/trade/active', { credentials: 'same-origin' });
+            if (!res.ok) return;
+            const data = await res.json();
+
+            const prevIds  = new Set(this.active.map(t => t.id));
+            this.active    = (data.trades ?? []) as Trade[];
+            const newIds   = new Set(this.active.map(t => t.id));
+            const settled  = [...prevIds].filter(id => !newIds.has(id));
+
+            if (settled.length > 0) {
+                try {
+                    const rRes         = await fetch('/trade/recent', { credentials: 'same-origin' });
+                    const recent       = await rRes.json();
+                    this.completed     = Array.isArray(recent) ? (recent as Trade[]) : [];
+                } catch { /* ignore */ }
+            }
+
+            this.notifyTrades();
+        } catch { /* ignore */ }
+    }
+
+    // ─── Tick polling ─────────────────────────────────────────────────────────
+
+    private startTickPolling(): void {
+        if (this.tickTimer) clearInterval(this.tickTimer);
+        this.tickTimer = setInterval(() => this.pollTicks(), 3000);
+    }
+
+    private async pollTicks(): Promise<void> {
+        if (this.assetId === null) return;
+        try {
+            const res = await fetch(`/trade/assets/${this.assetId}/ticks`, {
+                credentials: 'same-origin',
+            });
+            if (!res.ok) return;
+            const raw: Array<{ price: number | string; time: string; direction?: string }> =
+                await res.json();
+            if (!Array.isArray(raw) || raw.length === 0) return;
+
+            // Emit only ticks that are newer than the last one we processed
+            const newTicks = this.lastTickTime
+                ? raw.filter(t => t.time > this.lastTickTime!)
+                : raw.slice(-1);  // first poll: emit only the most recent tick
+
+            for (const t of newTicks) {
+                this.lastTickTime = t.time;
+                const tick: PriceTick = {
+                    price:     Number(t.price),
+                    time:      t.time,
+                    direction: (t.direction as PriceTick['direction']) ?? 'flat',
+                };
+                this.tickSubs.forEach(fn => fn(tick));
+            }
+        } catch { /* ignore */ }
+    }
+
+    // ─── Cleanup ──────────────────────────────────────────────────────────────
+
+    destroy(): void {
+        if (this.tickTimer)  { clearInterval(this.tickTimer);  this.tickTimer  = null; }
+        if (this.tradeTimer) { clearInterval(this.tradeTimer); this.tradeTimer = null; }
+        this.tickSubs.clear();
+        this.tradeSubs.clear();
+    }
+
+    // ─── Helpers ──────────────────────────────────────────────────────────────
+
+    private csrfToken(): string {
+        return document.querySelector<HTMLMetaElement>('meta[name="csrf-token"]')?.content ?? '';
+    }
+
+    private notifyTrades(): void {
+        this.tradeSubs.forEach(fn => fn([...this.active], [...this.completed]));
+    }
+}
+
+// Singleton — one adapter per page
+export const adapter = new NextTradeEngineAdapter();

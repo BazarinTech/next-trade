@@ -1,0 +1,5 @@
+@extends('errors.layout')
+@section('code', '500')
+@section('color', 'text-red-400')
+@section('title', 'Server Error')
+@section('description', 'Something went wrong on our end. Please try again in a moment.')

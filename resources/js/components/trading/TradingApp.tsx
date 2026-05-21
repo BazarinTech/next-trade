@@ -3,6 +3,7 @@ import { TradingChart } from './TradingChart';
 import { TradePanel } from './TradePanel';
 import { TradesPanel } from './TradesPanel';
 import { MobileTradeBar } from './MobileTradeBar';
+import { MobileActiveTrades } from './MobileActiveTrades';
 import { adapter } from '../../lib/trading/engine-adapter';
 import type { Trade, TradeAsset, Timeframe } from '../../lib/trading/chart-types';
 
@@ -196,6 +197,12 @@ export function TradingApp({
                 {assetBar}
                 {timeBar}
                 <div style={{ flex: 1, minHeight: 0 }}>{chart}</div>
+                <MobileActiveTrades
+                    active={active}
+                    completed={completed}
+                    currentPrice={currentPrice}
+                    assetId={selected?.id ?? null}
+                />
                 <MobileTradeBar
                     asset={selected}
                     currentPrice={currentPrice}

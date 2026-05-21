@@ -27,7 +27,9 @@ export function MobileTradeBar({ asset, currentPrice, balance, walletMode, onTra
     const [expiry,  setExpiry]  = useState(60);
     const [placing, setPlacing] = useState<'buy' | 'sell' | null>(null);
     const [error,   setError]   = useState<string | null>(null);
-    const [expanded, setExpanded] = useState(false);
+    const [expanded, setExpanded] = useState(() => {
+        try { return localStorage.getItem('nt_panel_collapsed') !== '1'; } catch { return true; }
+    });
 
     const minPayout = +(stake * (1 + MIN_RATE)).toFixed(2);
     const maxPayout = +(stake * (1 + MAX_RATE)).toFixed(2);
@@ -60,7 +62,11 @@ export function MobileTradeBar({ asset, currentPrice, balance, walletMode, onTra
 
             {/* Expand/collapse toggle bar */}
             <button
-                onClick={() => setExpanded(o => !o)}
+                onClick={() => setExpanded(o => {
+                    const next = !o;
+                    try { localStorage.setItem('nt_panel_collapsed', next ? '0' : '1'); } catch {}
+                    return next;
+                })}
                 style={{ width: '100%', padding: '6px 16px', background: 'transparent', border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'space-between', borderBottom: expanded ? '1px solid #1f2937' : 'none' }}
             >
                 <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>

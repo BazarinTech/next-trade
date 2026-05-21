@@ -6,6 +6,7 @@ use App\Models\AdminLog;
 use App\Models\BotEarning;
 use App\Models\BotInvestment;
 use App\Models\PaymentDeposit;
+use App\Models\ReferralCommission;
 use App\Models\Role;
 use App\Models\Trade;
 use App\Models\Transaction;
@@ -13,11 +14,13 @@ use App\Models\UserBan;
 use App\Models\Wallet;
 use App\Models\Withdrawal;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
+use Illuminate\Support\Str;
 
 class User extends Authenticatable
 {
@@ -32,10 +35,24 @@ class User extends Authenticatable
         'password',
         'avatar',
         'theme_preference',
+        'referral_code',
+        'referred_by',
         'is_admin',
         'is_banned',
         'last_login_at',
     ];
+
+    protected static function booted(): void
+    {
+        static::creating(function (User $user) {
+            if (empty($user->referral_code)) {
+                do {
+                    $code = strtoupper(Str::random(8));
+                } while (static::where('referral_code', $code)->exists());
+                $user->referral_code = $code;
+            }
+        });
+    }
 
     protected $hidden = [
         'password',
@@ -108,6 +125,21 @@ class User extends Authenticatable
     public function adminLogs(): HasMany
     {
         return $this->hasMany(AdminLog::class, 'admin_id');
+    }
+
+    public function referrer(): BelongsTo
+    {
+        return $this->belongsTo(User::class, 'referred_by');
+    }
+
+    public function referrals(): HasMany
+    {
+        return $this->hasMany(User::class, 'referred_by');
+    }
+
+    public function referralCommissions(): HasMany
+    {
+        return $this->hasMany(ReferralCommission::class, 'referrer_id');
     }
 
     public function isKenya(): bool

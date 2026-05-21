@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\Admin\AdminAdminController;
+use App\Http\Controllers\Admin\AdminReferralController;
 use App\Http\Controllers\Admin\AdminAssetController;
 use App\Http\Controllers\Admin\AdminAuditLogController;
 use App\Http\Controllers\Admin\AdminBotController;
@@ -61,6 +62,7 @@ Route::middleware(['auth'])->group(function () {
     Route::get('/modal/profile',       [ModalController::class, 'profile'])->name('modal.profile');
     Route::get('/modal/settings',  [ModalController::class, 'settings'])->name('modal.settings');
     Route::get('/modal/logout',    [ModalController::class, 'logout'])->name('modal.logout');
+    Route::get('/modal/referral',  [ModalController::class, 'referral'])->name('modal.referral');
 
     // Bots (index and earnings redirect to trade page where modal can be opened)
     Route::get('/bots',                                    fn() => redirect()->route('trade.index'))->name('bots.index');
@@ -215,6 +217,9 @@ Route::middleware(['auth', 'admin'])->prefix('admin')->name('admin.')->group(fun
         Route::post('/withdrawals/{withdrawal}/successful', [AdminWithdrawalController::class, 'successful'])->name('withdrawals.successful');
         Route::post('/withdrawals/{withdrawal}/failed',     [AdminWithdrawalController::class, 'failed'])->name('withdrawals.failed');
     });
+
+    // ── Referrals ──────────────────────────────────────────────────────────
+    Route::get('/referrals', [AdminReferralController::class, 'index'])->name('referrals');
 
     // ── System Health ──────────────────────────────────────────────────────
     Route::get('/system-health', [AdminHealthController::class, 'index'])->name('system-health');

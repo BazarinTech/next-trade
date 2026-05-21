@@ -102,6 +102,7 @@
                     ['route' => 'admin.permissions',    'label' => 'Permissions',     'icon' => 'lock'],
                     ['route' => 'admin.admins',         'label' => 'Admins',          'icon' => 'users-check'],
                     ['route' => 'admin.audit-logs',     'label' => 'Audit Logs',      'icon' => 'file-text'],
+                    ['route' => 'admin.referrals',      'label' => 'Referrals',       'icon' => 'users'],
                     ['route' => 'admin.system-settings','label' => 'System Settings', 'icon' => 'sliders'],
                     ['route' => 'admin.system-health',  'label' => 'System Health',   'icon' => 'activity'],
                 ];

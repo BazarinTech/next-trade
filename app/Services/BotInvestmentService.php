@@ -33,6 +33,9 @@ class BotInvestmentService
         if (!$this->settings->boolean('bot_investments_enabled', true)) {
             throw new RuntimeException('Bot investments are currently disabled. Please try again later.');
         }
+        if ($walletType !== 'live') {
+            throw new RuntimeException('Bot investments can only be made from your live wallet. Please switch to live mode.');
+        }
         if (!$plan->isActive()) {
             throw new RuntimeException('This bot plan is not currently available.');
         }

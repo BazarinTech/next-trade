@@ -4,11 +4,13 @@ namespace App\Http\Controllers;
 
 use App\Models\Notification;
 use App\Models\PaymentDeposit;
+use App\Models\ReferralCommission;
 use App\Models\Transaction;
 use App\Models\Withdrawal;
 use App\Services\BotInvestmentService;
 use App\Services\CurrencyService;
 use App\Services\NotificationService;
+use App\Services\ReferralService;
 use App\Services\WalletService;
 
 class ModalController extends Controller
@@ -95,6 +97,24 @@ class ModalController extends Controller
         return view('modals.settings', [
             'currentTheme' => auth()->user()->theme_preference ?? 'dark',
         ]);
+    }
+
+    public function referral(ReferralService $referralService)
+    {
+        $user        = auth()->user();
+        $commissions = ReferralCommission::where('referrer_id', $user->id)
+            ->with('referred:id,name,email')
+            ->latest()
+            ->limit(10)
+            ->get();
+        $totalEarned  = $referralService->totalEarned($user);
+        $totalInvited = $user->referrals()->count();
+        $activeCount  = $referralService->activeReferralCount($user);
+        $referralUrl  = url('/register?ref=' . $user->referral_code);
+
+        return view('modals.referral', compact(
+            'commissions', 'totalEarned', 'totalInvited', 'activeCount', 'referralUrl'
+        ));
     }
 
     public function logout()

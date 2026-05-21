@@ -5,6 +5,7 @@ namespace App\Services;
 use App\Models\PaymentDeposit;
 use App\Models\User;
 use Illuminate\Http\UploadedFile;
+use App\Services\ReferralService;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Storage;
@@ -17,7 +18,8 @@ class DepositService
         private PalPlussService $palpluss,
         private CurrencyService $currency,
         private WalletService   $walletService,
-        private SettingsService $settings
+        private SettingsService $settings,
+        private ReferralService $referralService
     ) {}
 
     public function initiateMpesaDeposit(
@@ -260,7 +262,12 @@ class DepositService
                 'user_id'     => $deposit->user_id,
             ]);
 
-            return $deposit->fresh();
+            $fresh = $deposit->fresh();
+
+            // Fire referral commission outside the lock — failure must not roll back the credit
+            $this->referralService->processDepositCommission($fresh);
+
+            return $fresh;
         });
     }
 
@@ -397,7 +404,11 @@ class DepositService
                 'txid'       => $deposit->txid,
             ]);
 
-            return $deposit->fresh();
+            $fresh = $deposit->fresh();
+
+            $this->referralService->processDepositCommission($fresh);
+
+            return $fresh;
         });
     }
 

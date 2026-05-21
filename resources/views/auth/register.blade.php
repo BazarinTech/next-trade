@@ -12,6 +12,19 @@
         <form method="POST" action="{{ route('register') }}" class="space-y-4"
               x-data="{ loading: false }" @submit="loading = true">
             @csrf
+            <input type="hidden" name="ref_code" value="{{ $refCode ?? old('ref_code') }}">
+
+            @if(!empty($refCode ?? old('ref_code')))
+            <div class="flex items-center gap-2 px-3 py-2.5 rounded-xl border"
+                 style="background:rgba(6,182,212,0.06);border-color:rgba(6,182,212,0.25);">
+                <svg class="w-4 h-4 flex-shrink-0" style="color:#22d3ee;" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z"/>
+                </svg>
+                <p class="text-xs" style="color:#22d3ee;">
+                    You were referred with code <strong>{{ strtoupper($refCode ?? old('ref_code')) }}</strong>
+                </p>
+            </div>
+            @endif
 
             <!-- Full Name + Username -->
             <div class="grid grid-cols-2 gap-3">

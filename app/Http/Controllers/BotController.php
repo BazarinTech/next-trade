@@ -68,7 +68,7 @@ class BotController extends Controller
         }
     }
 
-    public function cancel(BotInvestment $investment): RedirectResponse
+    public function cancel(Request $request, BotInvestment $investment): JsonResponse|RedirectResponse
     {
         if ($investment->user_id !== auth()->id()) {
             abort(403);
@@ -76,8 +76,16 @@ class BotController extends Controller
 
         try {
             $this->botService->cancelInvestment($investment);
+
+            if ($request->expectsJson()) {
+                return response()->json(['success' => true, 'message' => 'Investment cancelled successfully.']);
+            }
+
             return redirect()->route('trade.index')->with('success', 'Investment cancelled successfully.');
         } catch (\RuntimeException $e) {
+            if ($request->expectsJson()) {
+                return response()->json(['success' => false, 'message' => $e->getMessage()], 422);
+            }
             return back()->with('error', $e->getMessage());
         }
     }

@@ -1,7 +1,7 @@
-<div style="display:flex;flex-direction:column;height:100%;">
+<div style="display:flex;flex-direction:column;">
 
     {{-- Header --}}
-    <div style="padding:16px 20px;border-bottom:1px solid #1f2937;display:flex;align-items:center;justify-content:space-between;flex-shrink:0;">
+    <div style="padding:16px 20px;border-bottom:1px solid #1f2937;display:flex;align-items:center;justify-content:space-between;flex-shrink:0;position:sticky;top:0;z-index:2;background:#0b1120;">
         <div>
             <h2 style="font-size:15px;font-weight:700;color:white;margin:0;">Transaction History</h2>
             <p style="font-size:11px;color:#6b7280;margin:2px 0 0;">Recent 50 transactions</p>
@@ -10,7 +10,7 @@
     </div>
 
     {{-- Transactions list --}}
-    <div style="overflow-y:auto;flex:1;">
+    <div>
 
         @if($transactions->isEmpty())
         <div style="display:flex;flex-direction:column;align-items:center;justify-content:center;padding:48px 20px;text-align:center;">

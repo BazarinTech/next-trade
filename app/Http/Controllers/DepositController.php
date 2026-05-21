@@ -6,6 +6,7 @@ use App\Models\PaymentDeposit;
 use App\Services\CurrencyService;
 use App\Services\DepositService;
 use App\Services\WalletService;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\View\View;
@@ -33,11 +34,14 @@ class DepositController extends Controller
         ]);
     }
 
-    public function initiateMpesa(Request $request): RedirectResponse
+    public function initiateMpesa(Request $request): JsonResponse|RedirectResponse
     {
         $user = auth()->user();
 
         if (!$user->isKenya()) {
+            if ($request->expectsJson()) {
+                return response()->json(['message' => 'M-Pesa deposits are currently available for Kenya accounts only.'], 422);
+            }
             return back()->with('error', 'M-Pesa deposits are currently available for Kenya accounts only.');
         }
 
@@ -59,15 +63,26 @@ class DepositController extends Controller
                 $validated['wallet_type']
             );
 
+            if ($request->expectsJson()) {
+                return response()->json([
+                    'success'  => true,
+                    'message'  => 'STK push sent. Complete payment on your phone.',
+                    'redirect' => route('deposits.show', $deposit),
+                ]);
+            }
+
             return redirect()
                 ->route('deposits.show', $deposit)
                 ->with('success', 'STK push sent. Complete payment on your phone.');
         } catch (RuntimeException $e) {
+            if ($request->expectsJson()) {
+                return response()->json(['message' => $e->getMessage()], 422);
+            }
             return back()->with('error', $e->getMessage())->withInput();
         }
     }
 
-    public function storeUsdtDeposit(Request $request): RedirectResponse
+    public function storeUsdtDeposit(Request $request): JsonResponse|RedirectResponse
     {
         $user = auth()->user();
 
@@ -93,10 +108,21 @@ class DepositController extends Controller
                 $validated['wallet_type']
             );
 
+            if ($request->expectsJson()) {
+                return response()->json([
+                    'success'  => true,
+                    'message'  => 'USDT deposit submitted for admin review. You will be notified once it is approved.',
+                    'redirect' => route('deposits.show', $deposit),
+                ]);
+            }
+
             return redirect()
                 ->route('deposits.show', $deposit)
                 ->with('success', 'USDT deposit submitted for admin review. You will be notified once it is approved.');
         } catch (RuntimeException $e) {
+            if ($request->expectsJson()) {
+                return response()->json(['message' => $e->getMessage()], 422);
+            }
             return back()->with('error', $e->getMessage())->withInput();
         }
     }

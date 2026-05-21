@@ -112,7 +112,8 @@ class User extends Authenticatable
 
     public function isKenya(): bool
     {
-        return strtolower(trim($this->country ?? '')) === 'kenya';
+        $c = strtolower(trim($this->country ?? ''));
+        return $c === 'kenya' || $c === 'ke';
     }
 
     public function isSuperAdmin(): bool

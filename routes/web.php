@@ -52,11 +52,15 @@ Route::middleware(['auth'])->group(function () {
     Route::get('/trade/assets/{asset}/ticks',     [MarketController::class, 'ticks'])->name('trade.ticks');
 
     // Modal endpoints (AJAX HTML fragments)
-    Route::get('/modal/deposit',  [ModalController::class, 'deposit'])->name('modal.deposit');
-    Route::get('/modal/withdraw', [ModalController::class, 'withdraw'])->name('modal.withdraw');
-    Route::get('/modal/wallet',   [ModalController::class, 'wallet'])->name('modal.wallet');
-    Route::get('/modal/history',  [ModalController::class, 'history'])->name('modal.history');
-    Route::get('/modal/bots',     [ModalController::class, 'bots'])->name('modal.bots');
+    Route::get('/modal/deposit',   [ModalController::class, 'deposit'])->name('modal.deposit');
+    Route::get('/modal/withdraw',  [ModalController::class, 'withdraw'])->name('modal.withdraw');
+    Route::get('/modal/wallet',    [ModalController::class, 'wallet'])->name('modal.wallet');
+    Route::get('/modal/history',   [ModalController::class, 'history'])->name('modal.history');
+    Route::get('/modal/bots',          [ModalController::class, 'bots'])->name('modal.bots');
+    Route::get('/modal/notifications', [ModalController::class, 'notifications'])->name('modal.notifications');
+    Route::get('/modal/profile',       [ModalController::class, 'profile'])->name('modal.profile');
+    Route::get('/modal/settings',  [ModalController::class, 'settings'])->name('modal.settings');
+    Route::get('/modal/logout',    [ModalController::class, 'logout'])->name('modal.logout');
 
     // Bots (index and earnings redirect to trade page where modal can be opened)
     Route::get('/bots',                                    fn() => redirect()->route('trade.index'))->name('bots.index');
@@ -92,6 +96,11 @@ Route::middleware(['auth'])->group(function () {
 
     // Settings
     Route::get('/settings', [DashboardController::class, 'settings'])->name('settings.index');
+    Route::patch('/user/theme', function(\Illuminate\Http\Request $request) {
+        $request->validate(['theme' => 'required|in:dark,light,system']);
+        auth()->user()->update(['theme_preference' => $request->theme]);
+        return response()->json(['success' => true]);
+    })->name('user.theme');
 
     // Support
     Route::get('/support', [DashboardController::class, 'support'])->name('support.index');

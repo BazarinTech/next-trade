@@ -2,11 +2,13 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\Notification;
 use App\Models\PaymentDeposit;
 use App\Models\Transaction;
 use App\Models\Withdrawal;
 use App\Services\BotInvestmentService;
 use App\Services\CurrencyService;
+use App\Services\NotificationService;
 use App\Services\WalletService;
 
 class ModalController extends Controller
@@ -70,5 +72,33 @@ class ModalController extends Controller
         $plans      = $botService->getActivePlans();
         $portfolio  = $botService->getUserPortfolio($user);
         return view('modals.bots', array_merge(compact('plans', 'wallet', 'walletMode'), $portfolio));
+    }
+
+    public function notifications(NotificationService $notificationService)
+    {
+        $user          = auth()->user();
+        $notifications = Notification::where('user_id', $user->id)
+            ->orderByDesc('created_at')
+            ->limit(50)
+            ->get();
+        $unreadCount   = $notificationService->unreadCount($user);
+        return view('modals.notifications', compact('notifications', 'unreadCount'));
+    }
+
+    public function profile()
+    {
+        return view('modals.profile');
+    }
+
+    public function settings()
+    {
+        return view('modals.settings', [
+            'currentTheme' => auth()->user()->theme_preference ?? 'dark',
+        ]);
+    }
+
+    public function logout()
+    {
+        return view('modals.logout');
     }
 }

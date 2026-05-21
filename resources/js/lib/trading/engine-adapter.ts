@@ -156,6 +156,8 @@ class NextTradeEngineAdapter implements IEngineAdapter {
 
     private startTickPolling(): void {
         if (this.tickTimer) clearInterval(this.tickTimer);
+        // Fire immediately so the chart reflects the latest price on asset switch
+        setTimeout(() => this.pollTicks(), 0);
         this.tickTimer = setInterval(() => this.pollTicks(), 3000);
     }
 

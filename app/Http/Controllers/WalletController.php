@@ -6,6 +6,7 @@ use App\Models\PaymentDeposit;
 use App\Models\Withdrawal;
 use App\Services\CurrencyService;
 use App\Services\WalletService;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\View\View;
@@ -79,13 +80,24 @@ class WalletController extends Controller
         return back()->with('success', 'Switched to ' . ucfirst($mode) . ' wallet.');
     }
 
-    public function resetDemo(Request $request): RedirectResponse
+    public function resetDemo(Request $request): JsonResponse|RedirectResponse
     {
         try {
             $this->walletService->resetDemoWallet(auth()->user());
             session(['wallet_mode' => 'demo']);
+
+            if ($request->expectsJson()) {
+                return response()->json([
+                    'success' => true,
+                    'message' => 'Demo wallet has been reset to $10,000.00.',
+                ]);
+            }
+
             return back()->with('success', 'Demo wallet has been reset to $10,000.00.');
         } catch (RuntimeException $e) {
+            if ($request->expectsJson()) {
+                return response()->json(['message' => $e->getMessage()], 422);
+            }
             return back()->with('error', $e->getMessage());
         }
     }

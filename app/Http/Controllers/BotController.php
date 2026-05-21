@@ -38,7 +38,7 @@ class BotController extends Controller
         return view('bots.index', array_merge(compact('plans', 'wallet', 'walletMode', 'recentEarnings'), $portfolio));
     }
 
-    public function invest(Request $request): RedirectResponse
+    public function invest(Request $request): JsonResponse|RedirectResponse
     {
         $validated = $request->validate([
             'bot_plan_id' => 'required|exists:bot_plans,id',
@@ -51,8 +51,19 @@ class BotController extends Controller
 
         try {
             $investment = $this->botService->invest($user, $plan, (float) $validated['amount'], $walletMode);
+
+            if ($request->expectsJson()) {
+                return response()->json([
+                    'success' => true,
+                    'message' => "Successfully invested \${$investment->principal_amount} in {$plan->name}. Daily earnings will be credited automatically.",
+                ]);
+            }
+
             return redirect()->route('trade.index')->with('success', "Successfully invested \${$investment->principal_amount} in {$plan->name}. Daily earnings will be credited automatically.");
         } catch (\RuntimeException $e) {
+            if ($request->expectsJson()) {
+                return response()->json(['message' => $e->getMessage()], 422);
+            }
             return back()->with('error', $e->getMessage())->withInput();
         }
     }

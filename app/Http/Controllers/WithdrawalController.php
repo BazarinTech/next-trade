@@ -7,6 +7,7 @@ use App\Services\CurrencyService;
 use App\Services\NotificationService;
 use App\Services\WalletService;
 use App\Services\WithdrawalService;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\View\View;
@@ -44,11 +45,14 @@ class WithdrawalController extends Controller
         ));
     }
 
-    public function requestMpesa(Request $request): RedirectResponse
+    public function requestMpesa(Request $request): JsonResponse|RedirectResponse
     {
         $user = auth()->user();
 
         if (!$user->isKenya()) {
+            if ($request->expectsJson()) {
+                return response()->json(['message' => 'M-Pesa withdrawals are only available for Kenya accounts.'], 422);
+            }
             return back()->with('error', 'M-Pesa withdrawals are only available for Kenya accounts.');
         }
 
@@ -71,15 +75,26 @@ class WithdrawalController extends Controller
                 'Your M-Pesa withdrawal of $' . number_format($withdrawal->usd_amount, 2) . ' has been submitted and is pending admin review.',
                 ['withdrawal_id' => $withdrawal->id]);
 
+            if ($request->expectsJson()) {
+                return response()->json([
+                    'success'  => true,
+                    'message'  => 'M-Pesa withdrawal request submitted. Admin will process it shortly.',
+                    'redirect' => route('withdrawals.show', $withdrawal),
+                ]);
+            }
+
             return redirect()
                 ->route('withdrawals.show', $withdrawal)
                 ->with('success', 'M-Pesa withdrawal request submitted. Admin will process it shortly.');
         } catch (RuntimeException $e) {
+            if ($request->expectsJson()) {
+                return response()->json(['message' => $e->getMessage()], 422);
+            }
             return back()->with('error', $e->getMessage())->withInput();
         }
     }
 
-    public function requestUsdt(Request $request): RedirectResponse
+    public function requestUsdt(Request $request): JsonResponse|RedirectResponse
     {
         $validated = $request->validate([
             'amount'         => 'required|numeric|min:5|max:100000',
@@ -101,10 +116,21 @@ class WithdrawalController extends Controller
                 'Your USDT withdrawal of $' . number_format($withdrawal->usd_amount, 2) . ' has been submitted and is pending admin review.',
                 ['withdrawal_id' => $withdrawal->id]);
 
+            if ($request->expectsJson()) {
+                return response()->json([
+                    'success'  => true,
+                    'message'  => 'USDT withdrawal request submitted. Admin will process it shortly.',
+                    'redirect' => route('withdrawals.show', $withdrawal),
+                ]);
+            }
+
             return redirect()
                 ->route('withdrawals.show', $withdrawal)
                 ->with('success', 'USDT withdrawal request submitted. Admin will process it shortly.');
         } catch (RuntimeException $e) {
+            if ($request->expectsJson()) {
+                return response()->json(['message' => $e->getMessage()], 422);
+            }
             return back()->with('error', $e->getMessage())->withInput();
         }
     }

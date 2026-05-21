@@ -1,7 +1,7 @@
-<div style="display:flex;flex-direction:column;height:100%;">
+<div style="display:flex;flex-direction:column;">
 
     {{-- Header --}}
-    <div style="padding:16px 20px;border-bottom:1px solid #1f2937;display:flex;align-items:center;justify-content:space-between;flex-shrink:0;">
+    <div style="padding:16px 20px;border-bottom:1px solid #1f2937;display:flex;align-items:center;justify-content:space-between;flex-shrink:0;position:sticky;top:0;z-index:2;background:#0b1120;">
         <div>
             <h2 style="font-size:15px;font-weight:700;color:white;margin:0;">Wallet</h2>
             <p style="font-size:11px;color:#6b7280;margin:2px 0 0;">Your demo &amp; live balances</p>
@@ -9,8 +9,8 @@
         <button @click="$store.modal.close()" style="width:30px;height:30px;display:flex;align-items:center;justify-content:center;border-radius:8px;border:1px solid #374151;background:transparent;cursor:pointer;color:#9ca3af;font-size:16px;">&times;</button>
     </div>
 
-    {{-- Scrollable body --}}
-    <div style="overflow-y:auto;padding:16px 20px;flex:1;display:flex;flex-direction:column;gap:14px;">
+    {{-- Body --}}
+    <div style="padding:16px 20px;display:flex;flex-direction:column;gap:14px;">
 
         {{-- Demo Wallet Card --}}
         <div style="border-radius:12px;border:1px solid #1f2937;background:rgba(17,24,39,0.6);overflow:hidden;{{ $walletMode === 'demo' ? 'border-color:rgba(245,158,11,.3);' : '' }}">
@@ -53,15 +53,39 @@
                     @endforeach
                 </div>
                 {{-- Reset demo --}}
-                <form method="POST" action="{{ route('wallet.demo.reset') }}" x-data="{ conf: false }" @submit.prevent="conf ? $el.submit() : (conf = true)" style="margin-top:10px;">
-                    @csrf
-                    <button type="submit"
-                            style="width:100%;padding:7px;border-radius:8px;font-size:11px;font-weight:600;cursor:pointer;border:1px solid;transition:all .15s;"
-                            :style="conf ? 'border-color:rgba(245,158,11,.5);color:#fbbf24;background:rgba(245,158,11,.08)' : 'border-color:#374151;color:#6b7280;background:transparent'">
-                        <span x-show="!conf">Reset Demo to $10,000</span>
-                        <span x-show="conf" x-cloak>Confirm? Click again</span>
-                    </button>
-                </form>
+                <div x-data="walletResetData()" style="margin-top:10px;">
+                    <div x-show="resetMsg" x-cloak style="margin-bottom:8px;padding:8px 10px;border-radius:8px;font-size:11px;line-height:1.5;"
+                         :style="resetMsg?.type === 'success' ? {background:'rgba(16,185,129,0.08)',border:'1px solid rgba(16,185,129,0.25)',color:'#34d399'} : {background:'rgba(239,68,68,0.08)',border:'1px solid rgba(239,68,68,0.25)',color:'#f87171'}">
+                        <span x-text="resetMsg?.text"></span>
+                    </div>
+                    <form method="POST" action="{{ route('wallet.demo.reset') }}" @submit.prevent="handleReset($el)">
+                        @csrf
+                        <button type="submit" :disabled="resetting"
+                                style="width:100%;padding:8px;border-radius:8px;font-size:11px;font-weight:600;cursor:pointer;border:1px solid;transition:all .18s;appearance:none;-webkit-appearance:none;display:flex;align-items:center;justify-content:center;gap:5px;"
+                                :style="resetting ? {borderColor:'rgba(245,158,11,.3)',color:'rgba(251,191,36,.5)',background:'rgba(245,158,11,.04)',cursor:'not-allowed'}
+                                      : conf ? {borderColor:'rgba(245,158,11,.6)',color:'#fbbf24',background:'rgba(245,158,11,.12)'}
+                                      : {borderColor:'rgba(55,65,81,.8)',color:'#6b7280',background:'rgba(31,41,55,0.4)'}">
+                            <template x-if="resetting">
+                                <span style="display:flex;align-items:center;gap:5px;">
+                                    <svg style="width:12px;height:12px;animation:nt-spin 1s linear infinite;" fill="none" viewBox="0 0 24 24"><circle style="opacity:.25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path style="opacity:.75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"></path></svg>
+                                    Resetting…
+                                </span>
+                            </template>
+                            <template x-if="!resetting && conf">
+                                <span style="display:flex;align-items:center;gap:5px;">
+                                    <svg style="width:11px;height:11px;" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/></svg>
+                                    Tap again to confirm reset
+                                </span>
+                            </template>
+                            <template x-if="!resetting && !conf">
+                                <span style="display:flex;align-items:center;gap:5px;">
+                                    <svg style="width:11px;height:11px;" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/></svg>
+                                    Reset Demo to $10,000
+                                </span>
+                            </template>
+                        </button>
+                    </form>
+                </div>
             </div>
         </div>
 
@@ -107,11 +131,11 @@
                 </div>
                 <div style="display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-top:8px;">
                     <button type="button" @click="$store.modal.open('deposit')"
-                            style="padding:8px;border-radius:8px;border:none;font-size:11px;font-weight:700;color:black;cursor:pointer;background:#22d3ee;">
+                            style="padding:8px;border-radius:8px;border:none;font-size:11px;font-weight:700;color:black;cursor:pointer;background:#22d3ee;appearance:none;-webkit-appearance:none;">
                         Deposit
                     </button>
                     <button type="button" @click="$store.modal.open('withdraw')"
-                            style="padding:8px;border-radius:8px;border:1px solid #374151;font-size:11px;font-weight:600;color:#d1d5db;cursor:pointer;background:transparent;transition:all .15s;"
+                            style="padding:8px;border-radius:8px;border:1px solid #374151;font-size:11px;font-weight:600;color:#d1d5db;cursor:pointer;background:rgba(31,41,55,0.4);transition:all .15s;appearance:none;-webkit-appearance:none;"
                             onmouseover="this.style.borderColor='rgba(6,182,212,.4)'" onmouseout="this.style.borderColor='#374151'">
                         Withdraw
                     </button>
@@ -155,3 +179,50 @@
 
     </div>
 </div>
+
+<style>@keyframes nt-spin { to { transform: rotate(360deg); } }</style>
+
+<script>
+function walletResetData() {
+    return {
+        conf: false,
+        resetting: false,
+        resetMsg: null,
+        _confTimer: null,
+
+        async handleReset(form) {
+            if (!this.conf) {
+                this.conf = true;
+                clearTimeout(this._confTimer);
+                this._confTimer = setTimeout(() => { this.conf = false; }, 5000);
+                return;
+            }
+            clearTimeout(this._confTimer);
+            this.resetting = true;
+            this.resetMsg = null;
+            try {
+                const fd = new FormData(form);
+                const res = await fetch(form.action, {
+                    method: 'POST',
+                    headers: { 'Accept': 'application/json', 'X-Requested-With': 'XMLHttpRequest' },
+                    body: fd,
+                });
+                const data = await res.json();
+                if (res.ok) {
+                    this.resetMsg = { type: 'success', text: data.message };
+                    this.conf = false;
+                    setTimeout(() => $store.modal.open('wallet'), 1200);
+                } else {
+                    this.resetMsg = { type: 'error', text: data.message || 'Reset failed. Please try again.' };
+                    this.conf = false;
+                }
+            } catch (_) {
+                this.resetMsg = { type: 'error', text: 'Network error. Please try again.' };
+                this.conf = false;
+            } finally {
+                this.resetting = false;
+            }
+        },
+    };
+}
+</script>

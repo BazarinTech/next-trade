@@ -159,7 +159,7 @@
                             <span style="width:7px; height:7px; border-radius:50%; background:{{ $walletMode === 'demo' ? '#fbbf24' : '#22d3ee' }};"></span>
                             <span style="font-size:10px; font-weight:600; color:#6b7280; text-transform:uppercase;">{{ $walletMode }} balance</span>
                         </div>
-                        <span style="font-size:14px; font-weight:700; color:white; font-variant-numeric:tabular-nums;">${{ number_format($navWallet->available_balance, 2) }}</span>
+                        <span id="nt-balance-sidebar" style="font-size:14px; font-weight:700; color:white; font-variant-numeric:tabular-nums;">${{ number_format($navWallet->available_balance, 2) }}</span>
                     </div>
                     @endif
                 </div>
@@ -361,7 +361,7 @@
                 <button @click="$store.modal.open('wallet')"
                    style="display:flex; align-items:center; gap:5px; padding:4px 10px; border-radius:8px; background:rgba(17,24,39,1); border:1px solid #1f2937; cursor:pointer; flex-shrink:0;">
                     <span style="width:6px; height:6px; border-radius:50%; background:{{ $walletMode === 'demo' ? '#fbbf24' : '#22d3ee' }};"></span>
-                    <span style="font-size:12px; font-weight:700; color:white; font-variant-numeric:tabular-nums;">${{ number_format($navWallet->available_balance, 2) }}</span>
+                    <span id="nt-balance-nav" style="font-size:12px; font-weight:700; color:white; font-variant-numeric:tabular-nums;">${{ number_format($navWallet->available_balance, 2) }}</span>
                 </button>
                 @endif
 
@@ -453,5 +453,14 @@
         });
     </script>
     @stack('scripts')
+    <script>
+        window.addEventListener('nt:balance', function (e) {
+            var fmt = '$' + Number(e.detail.balance).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+            var nav     = document.getElementById('nt-balance-nav');
+            var sidebar = document.getElementById('nt-balance-sidebar');
+            if (nav)     nav.textContent     = fmt;
+            if (sidebar) sidebar.textContent = fmt;
+        });
+    </script>
 </body>
 </html>

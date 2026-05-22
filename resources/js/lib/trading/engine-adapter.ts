@@ -214,6 +214,8 @@ class NextTradeEngineAdapter implements IEngineAdapter {
 
     private notifyTrades(): void {
         this.tradeSubs.forEach(fn => fn([...this.active], [...this.completed], this.walletBalance));
+        // Keep static Blade-rendered balance elements in sync
+        window.dispatchEvent(new CustomEvent('nt:balance', { detail: { balance: this.walletBalance } }));
     }
 }
 

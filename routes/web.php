@@ -241,5 +241,6 @@ Route::middleware(['auth', 'admin'])->prefix('admin')->name('admin.')->group(fun
 
 // ─── Webhooks (no CSRF, no auth) ─────────────────────────────────────────────
 Route::post('/webhooks/mpesa', [PalPlussWebhookController::class, 'handle'])->name('webhooks.mpesa');
+Route::post('/webhooks/b2c',   [PalPlussWebhookController::class, 'handleB2c'])->name('webhooks.b2c');
 
 require __DIR__.'/auth.php';

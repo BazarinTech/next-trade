@@ -72,6 +72,57 @@ class PalPlussService
         }
     }
 
+    public function initiateB2c(array $payload): array
+    {
+        try {
+            $response = Http::withHeaders($this->buildBasicAuthHeader())
+                ->timeout(30)
+                ->retry(2, 500, throw: false)
+                ->post("{$this->baseUrl}/v1/b2c/payouts", array_merge($payload, [
+                    'callbackUrl' => config('palpluss.b2c_callback_url', ''),
+                ]));
+
+            $body = $response->json() ?? [];
+
+            if (!$response->successful() || !($body['success'] ?? false)) {
+                $errorMsg  = $body['error']['message'] ?? 'B2C initiation failed';
+                $errorCode = $body['error']['code']    ?? 'UNKNOWN';
+
+                Log::warning('PalPluss B2C initiation failed', [
+                    'status'  => $response->status(),
+                    'error'   => $errorMsg,
+                    'code'    => $errorCode,
+                    'payload' => $this->safeLogPayload($payload),
+                ]);
+
+                return [
+                    'success' => false,
+                    'message' => $errorMsg,
+                    'code'    => $errorCode,
+                    'raw'     => $body,
+                ];
+            }
+
+            return [
+                'success' => true,
+                'data'    => $body['data'] ?? [],
+                'raw'     => $body,
+            ];
+        } catch (\Throwable $e) {
+            Log::error('PalPluss B2C initiation exception', [
+                'message' => $e->getMessage(),
+                'payload' => $this->safeLogPayload($payload),
+            ]);
+
+            return [
+                'success' => false,
+                'message' => 'Unable to reach payment provider. Please try again.',
+                'code'    => 'CONNECTION_ERROR',
+                'raw'     => [],
+            ];
+        }
+    }
+
     public function getTransactionStatus(string $transactionId): array
     {
         try {

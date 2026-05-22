@@ -1,4 +1,4 @@
-import React, { useEffect, useRef } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import {
     createChart,
     ColorType,
@@ -24,6 +24,8 @@ interface Props {
 }
 
 export function TradingChart({ asset, timeframe, activeTrades }: Props) {
+    const [loading, setLoading] = useState(true);
+
     const containerRef   = useRef<HTMLDivElement>(null);
     const chartRef       = useRef<IChartApi | null>(null);
     const seriesRef      = useRef<ISeriesApi<SeriesType> | null>(null);
@@ -161,19 +163,17 @@ export function TradingChart({ asset, timeframe, activeTrades }: Props) {
             const candles = builderRef.current.loadHistoricalTicks(ticks);
             if (candles.length > 0) {
                 seriesRef.current.setData(candles as CandlestickData[]);
-                // Stretch all historical candles to fill the full chart width
                 chartRef.current.timeScale().fitContent();
             }
 
             loadedRef.current = true;
+            setLoading(false);
 
-            // Process any ticks that arrived while we were loading
             for (const tick of pendingRef.current) {
                 const { candle } = builderRef.current.processTick(tick);
                 seriesRef.current.update(candle as CandlestickData);
             }
             pendingRef.current = [];
-            // Keep the latest candle visible at the right edge
             chartRef.current.timeScale().scrollToRealTime();
         });
 
@@ -223,8 +223,22 @@ export function TradingChart({ asset, timeframe, activeTrades }: Props) {
     }, [activeTrades]);
 
     return (
-        <div style={{ width: '100%', height: '100%', background: '#030712' }}>
+        <div style={{ width: '100%', height: '100%', background: '#030712', position: 'relative' }}>
             <div ref={containerRef} style={{ width: '100%', height: '100%' }} />
+            {loading && (
+                <div style={{
+                    position: 'absolute', inset: 0, display: 'flex', flexDirection: 'column',
+                    alignItems: 'center', justifyContent: 'center', gap: 12,
+                    background: 'rgba(3,7,18,0.75)', backdropFilter: 'blur(2px)', zIndex: 10,
+                }}>
+                    <svg width="36" height="36" viewBox="0 0 36 36" style={{ animation: 'nt-spin 0.8s linear infinite' }}>
+                        <circle cx="18" cy="18" r="15" fill="none" stroke="rgba(6,182,212,0.15)" strokeWidth="3"/>
+                        <path d="M18 3 A15 15 0 0 1 33 18" fill="none" stroke="#06b6d4" strokeWidth="3" strokeLinecap="round"/>
+                    </svg>
+                    <span style={{ fontSize: 11, color: '#4b5563', letterSpacing: '0.05em' }}>Loading chart…</span>
+                    <style>{`@keyframes nt-spin { to { transform: rotate(360deg); } }`}</style>
+                </div>
+            )}
         </div>
     );
 }

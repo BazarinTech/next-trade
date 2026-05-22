@@ -13,9 +13,11 @@ use RuntimeException;
 class WithdrawalService
 {
     public function __construct(
-        private WalletService   $walletService,
-        private CurrencyService $currency,
-        private SettingsService $settings
+        private WalletService       $walletService,
+        private CurrencyService     $currency,
+        private SettingsService     $settings,
+        private PalPlussService     $palpluss,
+        private NotificationService $notifications,
     ) {}
 
     public function createMpesaWithdrawal(
@@ -30,16 +32,17 @@ class WithdrawalService
             throw new RuntimeException('M-Pesa withdrawals are only available for Kenya accounts.');
         }
 
-        $wallet = $this->getLiveWallet($user);
+        $wallet    = $this->getLiveWallet($user);
         $this->guardWallet($wallet, $usdAmount);
 
-        $fee        = $this->calculateWithdrawalFee($usdAmount, 'mpesa');
-        $netAmount  = round($usdAmount - $fee, 8);
-        $kesAmount  = $this->currency->usdToKes($usdAmount);
-        $rate       = $this->currency->getUsdKesRate();
-        $ref        = $this->generateReference($user);
+        $fee       = $this->calculateWithdrawalFee($usdAmount, 'mpesa');
+        $netAmount = round($usdAmount - $fee, 8);
+        $kesAmount = $this->currency->usdToKes($usdAmount);
+        $rate      = $this->currency->getUsdKesRate();
+        $ref       = $this->generateReference($user);
 
-        return DB::transaction(function () use (
+        // Step 1: Lock funds and record the withdrawal atomically
+        $withdrawal = DB::transaction(function () use (
             $user, $wallet, $usdAmount, $netAmount, $fee,
             $kesAmount, $rate, $phone, $ref
         ) {
@@ -62,6 +65,147 @@ class WithdrawalService
                 'metadata'          => ['requested_at' => now()->toISOString()],
             ]);
         });
+
+        // Step 2: Initiate B2C payout outside the transaction (HTTP must not run inside a DB TX)
+        try {
+            $b2cResult = $this->palpluss->initiateB2c([
+                'amount'      => (int) round((float) $kesAmount),
+                'phone'       => $this->palpluss->normalizePhone($phone),
+                'reference'   => $ref,
+                'description' => 'NextTrade withdrawal ' . $ref,
+            ]);
+        } catch (\Throwable $e) {
+            $b2cResult = ['success' => false, 'message' => $e->getMessage()];
+        }
+
+        if ($b2cResult['success']) {
+            $transactionId = $b2cResult['data']['transactionId'] ?? null;
+            $withdrawal->update([
+                'status'             => 'processing',
+                'provider_reference' => $transactionId,
+                'processed_at'       => now(),
+            ]);
+
+            Log::info('B2C payout initiated', [
+                'withdrawal_id'  => $withdrawal->id,
+                'transaction_id' => $transactionId,
+            ]);
+        } else {
+            // Rollback: unlock funds and mark withdrawal failed
+            DB::transaction(function () use ($withdrawal) {
+                $locked = Withdrawal::lockForUpdate()->find($withdrawal->id);
+                $this->walletService->unlockAmount($locked->wallet, (float) $locked->usd_amount);
+                $locked->update(['status' => 'failed', 'rejection_reason' => 'B2C initiation failed — please try again.']);
+            });
+
+            Log::error('B2C payout initiation failed, funds unlocked', [
+                'withdrawal_id' => $withdrawal->id,
+                'reason'        => $b2cResult['message'] ?? 'unknown',
+            ]);
+
+            throw new RuntimeException('Could not initiate M-Pesa payment. Please try again.');
+        }
+
+        return $withdrawal->fresh();
+    }
+
+    public function processB2cCallback(array $payload): void
+    {
+        $tx     = $payload['transaction'] ?? [];
+        $txId   = $tx['id']     ?? null;
+        $status = $tx['status'] ?? null;
+
+        if (!$txId || !$status) {
+            Log::warning('B2C callback: missing transaction id or status', ['payload' => $payload]);
+            return;
+        }
+
+        $withdrawal = Withdrawal::where('provider_reference', $txId)
+            ->where('method', 'mpesa')
+            ->first();
+
+        if (!$withdrawal) {
+            Log::warning('B2C callback: no withdrawal found for transaction', ['tx_id' => $txId]);
+            return;
+        }
+
+        if ($status === 'successful') {
+            DB::transaction(function () use ($withdrawal, $tx) {
+                $locked = Withdrawal::lockForUpdate()->find($withdrawal->id);
+
+                if ($locked->isSuccessful()) {
+                    return; // idempotency — already settled
+                }
+
+                $this->walletService->deductLockedAmount(
+                    $locked->wallet,
+                    (float) $locked->usd_amount,
+                    'withdrawal',
+                    "M-Pesa withdrawal: {$locked->usd_amount} USD via {$locked->account_reference}",
+                    [
+                        'withdrawal_id'      => $locked->id,
+                        'account_reference'  => $locked->account_reference,
+                        'method'             => 'mpesa',
+                        'provider_reference' => $locked->provider_reference,
+                    ]
+                );
+
+                $locked->update([
+                    'status'       => 'successful',
+                    'completed_at' => now(),
+                    'metadata'     => array_merge($locked->metadata ?? [], [
+                        'b2c_callback_at' => now()->toISOString(),
+                        'b2c_status'      => $tx['status'] ?? null,
+                    ]),
+                ]);
+            });
+
+            $withdrawal = $withdrawal->fresh();
+            $this->notifications->send(
+                $withdrawal->user,
+                'withdrawal_successful',
+                'Withdrawal Successful',
+                'Your M-Pesa withdrawal of $' . number_format((float) $withdrawal->usd_amount, 2) .
+                    ' (KES ' . number_format((float) $withdrawal->local_amount) . ') has been sent to your M-Pesa.',
+                ['withdrawal_id' => $withdrawal->id]
+            );
+
+            Log::info('B2C callback: withdrawal marked successful', ['withdrawal_id' => $withdrawal->id]);
+
+        } elseif ($status === 'failed') {
+            DB::transaction(function () use ($withdrawal, $tx) {
+                $locked = Withdrawal::lockForUpdate()->find($withdrawal->id);
+
+                if ($locked->isTerminal() && !in_array($locked->status, ['processing', 'pending'])) {
+                    return;
+                }
+
+                $this->walletService->unlockAmount($locked->wallet, (float) $locked->usd_amount);
+
+                $locked->update([
+                    'status'           => 'failed',
+                    'rejection_reason' => $tx['failureReason'] ?? 'M-Pesa payment failed',
+                    'metadata'         => array_merge($locked->metadata ?? [], [
+                        'b2c_callback_at' => now()->toISOString(),
+                        'b2c_status'      => $tx['status'] ?? null,
+                    ]),
+                ]);
+            });
+
+            $withdrawal = $withdrawal->fresh();
+            $this->notifications->send(
+                $withdrawal->user,
+                'withdrawal_failed',
+                'Withdrawal Failed',
+                'Your M-Pesa withdrawal of $' . number_format((float) $withdrawal->usd_amount, 2) .
+                    ' could not be completed. Funds have been returned to your wallet.',
+                ['withdrawal_id' => $withdrawal->id]
+            );
+
+            Log::info('B2C callback: withdrawal marked failed, funds unlocked', ['withdrawal_id' => $withdrawal->id]);
+        } else {
+            Log::info('B2C callback: unhandled status', ['tx_id' => $txId, 'status' => $status]);
+        }
     }
 
     public function createUsdtWithdrawal(

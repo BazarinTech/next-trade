@@ -13,14 +13,20 @@
     <div style="padding:16px 20px;display:flex;flex-direction:column;gap:16px;">
 
         {{-- Avatar card --}}
-        <div style="display:flex;align-items:center;gap:14px;padding:16px;border-radius:12px;background:rgba(17,24,39,0.6);border:1px solid #1f2937;">
-            <div style="width:52px;height:52px;border-radius:14px;background:linear-gradient(135deg,#06b6d4,#0891b2);display:flex;align-items:center;justify-content:center;flex-shrink:0;">
-                <span style="font-size:20px;font-weight:700;color:white;">{{ strtoupper(substr(auth()->user()->name, 0, 1)) }}</span>
+        <div style="display:flex;align-items:center;gap:16px;padding:18px;border-radius:14px;background:rgba(17,24,39,0.6);border:1px solid #1f2937;">
+            <div style="position:relative;flex-shrink:0;">
+                <div style="width:68px;height:68px;border-radius:18px;overflow:hidden;box-shadow:0 4px 16px rgba(0,0,0,0.5);background:{{ auth()->user()->avatarGradient }};display:flex;align-items:center;justify-content:center;">
+                    <img src="{{ auth()->user()->avatarUrl }}" alt="{{ auth()->user()->initials }}" width="68" height="68"
+                         style="width:68px;height:68px;object-fit:cover;display:block;"
+                         onerror="this.style.display='none';this.nextElementSibling.style.display='flex';">
+                    <span style="display:none;font-size:24px;font-weight:700;color:white;letter-spacing:0.04em;">{{ auth()->user()->initials }}</span>
+                </div>
+                <div style="position:absolute;bottom:-3px;right:-3px;width:16px;height:16px;border-radius:50%;background:#10b981;border:2px solid #0b1120;"></div>
             </div>
             <div style="min-width:0;">
-                <p style="font-size:14px;font-weight:700;color:white;margin:0 0 2px;">{{ auth()->user()->name }}</p>
-                <p style="font-size:11px;color:#6b7280;margin:0;">&#64;{{ auth()->user()->username }}</p>
-                <p style="font-size:11px;color:#22d3ee;margin:2px 0 0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">{{ auth()->user()->email }}</p>
+                <p style="font-size:15px;font-weight:700;color:white;margin:0 0 3px;">{{ auth()->user()->name }}</p>
+                <p style="font-size:11px;color:#6b7280;margin:0 0 2px;">&#64;{{ auth()->user()->username }}</p>
+                <p style="font-size:11px;color:#22d3ee;margin:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">{{ auth()->user()->email }}</p>
             </div>
         </div>
 

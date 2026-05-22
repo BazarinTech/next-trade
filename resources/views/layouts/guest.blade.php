@@ -5,6 +5,8 @@
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <meta name="csrf-token" content="{{ csrf_token() }}">
     <title>@yield('title', config('app.name', 'Next Trade'))</title>
+    @php $faviconUrl = app(\App\Services\SettingsService::class)->get('site_logo_url', ''); @endphp
+    <link rel="icon" type="image/x-icon" href="{{ $faviconUrl ?: asset('favicon.ico') }}">
 
     <script src="https://cdn.tailwindcss.com"></script>
     <script>
@@ -48,12 +50,7 @@
         <!-- Logo -->
         <div class="text-center mb-8">
             <a href="{{ url('/') }}" class="inline-flex items-center gap-2">
-                <div class="w-10 h-10 rounded-xl bg-cyan-500 flex items-center justify-center">
-                    <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6"/>
-                    </svg>
-                </div>
-                <span class="text-xl font-bold text-white">Next<span class="text-cyan-400">Trade</span></span>
+                <x-site-logo :size="40" :showText="true" />
             </a>
         </div>
 
@@ -61,7 +58,7 @@
     </div>
 
     <p class="mt-8 text-xs text-gray-600">
-        &copy; {{ date('Y') }} NextTrade. All rights reserved.
+        &copy; {{ date('Y') }} {{ app(\App\Services\SettingsService::class)->get('site_name', 'NextTrade') }}. All rights reserved.
     </p>
 
     @stack('scripts')

@@ -8,6 +8,7 @@ use App\Services\AdminLogService;
 use App\Services\SettingsService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Storage;
 use Illuminate\View\View;
 
 class AdminSystemSettingsController extends Controller
@@ -25,10 +26,42 @@ class AdminSystemSettingsController extends Controller
 
     public function update(Request $request): RedirectResponse
     {
+        $request->validate([
+            'site_logo_file' => 'nullable|image|mimes:png,jpg,jpeg,svg,webp|max:2048',
+        ]);
+
         $old = [];
         $new = [];
 
-        foreach ($request->except(['_token']) as $key => $value) {
+        // ── Logo upload ───────────────────────────────────────────────────────
+        if ($request->hasFile('site_logo_file')) {
+            $logoSetting = SystemSetting::where('key', 'site_logo_url')->first();
+            if ($logoSetting) {
+                // Delete old file if it was a local upload
+                if ($logoSetting->value && str_contains($logoSetting->value, '/storage/logos/')) {
+                    $oldPath = str_replace('/storage/', 'public/', parse_url($logoSetting->value, PHP_URL_PATH));
+                    Storage::delete($oldPath);
+                }
+                $path    = $request->file('site_logo_file')->store('logos', 'public');
+                $url     = Storage::url($path);
+                $old['site_logo_url'] = $logoSetting->value;
+                $logoSetting->update(['value' => $url]);
+                $new['site_logo_url'] = $url;
+            }
+        } elseif ($request->input('remove_logo') === '1') {
+            $logoSetting = SystemSetting::where('key', 'site_logo_url')->first();
+            if ($logoSetting && $logoSetting->value) {
+                if (str_contains($logoSetting->value, '/storage/logos/')) {
+                    $oldPath = str_replace('/storage/', 'public/', parse_url($logoSetting->value, PHP_URL_PATH));
+                    Storage::delete($oldPath);
+                }
+                $old['site_logo_url'] = $logoSetting->value;
+                $logoSetting->update(['value' => '']);
+                $new['site_logo_url'] = '';
+            }
+        }
+
+        foreach ($request->except(['_token', 'site_logo_file', 'remove_logo', 'site_logo_url']) as $key => $value) {
             $setting = SystemSetting::where('key', $key)->first();
             if (!$setting) {
                 continue;

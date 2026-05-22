@@ -180,4 +180,37 @@ class User extends Authenticatable
     {
         return $this->wallets()->where('type', $mode)->first();
     }
+
+    // ─── Avatar helpers ───────────────────────────────────────────────────────
+
+    public function getInitialsAttribute(): string
+    {
+        $words = array_filter(explode(' ', trim($this->name)));
+        if (count($words) >= 2) {
+            return strtoupper(mb_substr($words[0], 0, 1) . mb_substr(end($words), 0, 1));
+        }
+        return strtoupper(mb_substr($this->name, 0, 2));
+    }
+
+    public function getAvatarUrlAttribute(): string
+    {
+        $seed = rawurlencode($this->username ?? $this->name);
+        return "https://api.dicebear.com/9.x/personas/svg?seed={$seed}&backgroundColor=0f172a&body=rounded&eyes=open";
+    }
+
+    public function getAvatarGradientAttribute(): string
+    {
+        $palettes = [
+            ['#06b6d4', '#0891b2'],
+            ['#8b5cf6', '#7c3aed'],
+            ['#ec4899', '#db2777'],
+            ['#f59e0b', '#d97706'],
+            ['#10b981', '#059669'],
+            ['#3b82f6', '#2563eb'],
+            ['#f97316', '#ea580c'],
+            ['#a78bfa', '#7c3aed'],
+        ];
+        [$from, $to] = $palettes[$this->id % count($palettes)];
+        return "linear-gradient(135deg,{$from},{$to})";
+    }
 }

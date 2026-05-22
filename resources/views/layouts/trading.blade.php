@@ -5,6 +5,8 @@
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <meta name="csrf-token" content="{{ csrf_token() }}">
     <title>@yield('title', config('app.name', 'Next Trade'))</title>
+    @php $faviconUrl = app(\App\Services\SettingsService::class)->get('site_logo_url', ''); @endphp
+    <link rel="icon" type="image/x-icon" href="{{ $faviconUrl ?: asset('favicon.ico') }}">
 
     @vite(['resources/css/app.css'])
     <script>
@@ -126,12 +128,7 @@
                 <!-- Sidebar header: logo + close -->
                 <div style="height:56px; display:flex; align-items:center; justify-content:space-between; padding:0 16px; border-bottom:1px solid #1f2937; flex-shrink:0;">
                     <a href="{{ route('trade.index') }}" style="display:flex; align-items:center; gap:8px; text-decoration:none;">
-                        <div style="width:28px; height:28px; border-radius:8px; background:#06b6d4; display:flex; align-items:center; justify-content:center;">
-                            <svg style="width:15px;height:15px;" fill="none" stroke="white" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6"/>
-                            </svg>
-                        </div>
-                        <span style="font-size:14px; font-weight:700; color:white;">Next<span style="color:#22d3ee;">Trade</span></span>
+                        <x-site-logo :size="28" :showText="true" />
                     </a>
                     <button @click="sidebarOpen = false"
                             style="width:32px; height:32px; display:flex; align-items:center; justify-content:center; background:rgba(31,41,55,0.8); border:1px solid #374151; border-radius:8px; cursor:pointer; color:#9ca3af;">
@@ -145,8 +142,11 @@
                 @auth
                 <div style="padding:16px; border-bottom:1px solid #1f2937; flex-shrink:0;">
                     <div style="display:flex; align-items:center; gap:12px;">
-                        <div style="width:40px; height:40px; border-radius:50%; background:linear-gradient(135deg,#06b6d4,#0891b2); display:flex; align-items:center; justify-content:center; flex-shrink:0;">
-                            <span style="font-size:15px; font-weight:700; color:white;">{{ strtoupper(substr(auth()->user()->name, 0, 1)) }}</span>
+                        <div style="width:42px; height:42px; border-radius:12px; overflow:hidden; flex-shrink:0; box-shadow:0 2px 8px rgba(0,0,0,0.4); background:{{ auth()->user()->avatarGradient }}; display:flex; align-items:center; justify-content:center;">
+                            <img src="{{ auth()->user()->avatarUrl }}" alt="{{ auth()->user()->initials }}" width="42" height="42"
+                                 style="width:42px;height:42px;object-fit:cover;display:block;"
+                                 onerror="this.style.display='none';this.nextElementSibling.style.display='flex';">
+                            <span style="display:none;font-size:14px;font-weight:700;color:white;letter-spacing:0.03em;">{{ auth()->user()->initials }}</span>
                         </div>
                         <div style="min-width:0;">
                             <p style="font-size:13px; font-weight:600; color:white; margin:0 0 2px 0; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">{{ auth()->user()->name }}</p>
@@ -292,12 +292,7 @@
             <!-- Logo -->
             <a href="{{ route('trade.index') }}"
                style="display:flex; align-items:center; gap:8px; flex-shrink:0; text-decoration:none; margin-right:12px;">
-                <div style="width:28px; height:28px; border-radius:8px; background:#06b6d4; display:flex; align-items:center; justify-content:center; flex-shrink:0;">
-                    <svg style="width:15px;height:15px;" fill="none" stroke="white" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6"/>
-                    </svg>
-                </div>
-                <span class="nt-logo-text" style="font-size:13px; font-weight:700; color:white; white-space:nowrap;">Next<span style="color:#22d3ee;">Trade</span></span>
+                <x-site-logo :size="28" :showText="true" textClass="nt-logo-text" />
             </a>
 
             <!-- Mobile hamburger button (visible only on mobile) -->
@@ -384,8 +379,11 @@
                             style="display:flex; align-items:center; gap:6px; padding:4px 8px; border-radius:8px; background:transparent; border:none; cursor:pointer; transition:background 0.15s;"
                             onmouseover="this.style.background='rgba(31,41,55,0.8)'"
                             onmouseout="this.style.background='transparent'">
-                        <div style="width:26px; height:26px; border-radius:50%; background:linear-gradient(135deg,#06b6d4,#0891b2); display:flex; align-items:center; justify-content:center; flex-shrink:0;">
-                            <span style="font-size:10px; font-weight:700; color:white;">{{ strtoupper(substr(auth()->user()?->name ?? 'U', 0, 1)) }}</span>
+                        <div style="width:28px; height:28px; border-radius:8px; overflow:hidden; flex-shrink:0; box-shadow:0 1px 4px rgba(0,0,0,0.4); background:{{ auth()->user()->avatarGradient }}; display:flex; align-items:center; justify-content:center;">
+                            <img src="{{ auth()->user()->avatarUrl }}" alt="{{ auth()->user()->initials }}" width="28" height="28"
+                                 style="width:28px;height:28px;object-fit:cover;display:block;"
+                                 onerror="this.style.display='none';this.nextElementSibling.style.display='flex';">
+                            <span style="display:none;font-size:9px;font-weight:700;color:white;letter-spacing:0.03em;">{{ auth()->user()->initials }}</span>
                         </div>
                         <span class="nt-profile-name" style="font-size:12px; color:#d1d5db; white-space:nowrap; max-width:90px; overflow:hidden; text-overflow:ellipsis;">{{ auth()->user()?->name }}</span>
                         <svg style="width:11px;height:11px;color:#6b7280;" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg>

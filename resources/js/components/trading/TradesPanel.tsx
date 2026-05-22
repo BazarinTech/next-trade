@@ -197,11 +197,12 @@ export function TradesPanel({ active, completed, currentPrice, assetId }: Props)
                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2M9 12h6M9 16h4"/>
                         </svg>
                         <p style={{ fontSize: 11, color: '#6b7280', textAlign: 'center', margin: 0 }}>Full transaction history</p>
-                        <a href="/transactions"
-                           style={{ fontSize: 11, fontWeight: 600, color: '#22d3ee', textDecoration: 'none', display: 'flex', alignItems: 'center', gap: 4, padding: '6px 14px', borderRadius: 8, border: '1px solid rgba(6,182,212,0.3)', background: 'rgba(6,182,212,0.06)' }}>
+                        <button
+                            onClick={() => (window as any).Alpine?.store('modal')?.open('history')}
+                            style={{ fontSize: 11, fontWeight: 600, color: '#22d3ee', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 4, padding: '6px 14px', borderRadius: 8, border: '1px solid rgba(6,182,212,0.3)', background: 'rgba(6,182,212,0.06)' }}>
                             View Transactions
                             <svg style={{ width: 10, height: 10 }} fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7"/></svg>
-                        </a>
+                        </button>
                     </div>
                 )}
 

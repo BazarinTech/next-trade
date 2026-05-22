@@ -12,7 +12,7 @@
 <div class="mb-4 px-4 py-3 rounded-xl bg-red-500/10 border border-red-500/20 text-red-400 text-sm">{{ session('error') }}</div>
 @endif
 
-<form method="POST" action="{{ route('admin.system-settings.update') }}" class="space-y-6">
+<form method="POST" action="{{ route('admin.system-settings.update') }}" class="space-y-6" enctype="multipart/form-data">
     @csrf
 
     @foreach($groups as $group => $settings)
@@ -31,7 +31,29 @@
                     <p class="text-xs font-mono text-gray-600 mt-0.5">{{ $setting->key }}</p>
                 </div>
                 <div class="flex-shrink-0">
-                    @if($setting->type === 'boolean')
+                    @if($setting->key === 'site_logo_url')
+                    {{-- Logo upload --}}
+                    <div class="flex items-center gap-3">
+                        @if($setting->value)
+                        <div class="w-10 h-10 rounded-xl overflow-hidden border border-gray-700 flex-shrink-0 bg-gray-800 flex items-center justify-center">
+                            <img src="{{ $setting->value }}" alt="Logo" class="w-full h-full object-contain">
+                        </div>
+                        @endif
+                        <div class="flex flex-col gap-1">
+                            <label class="flex items-center gap-2 px-3 py-1.5 rounded-xl border border-dashed border-cyan-500/40 bg-cyan-500/5 cursor-pointer hover:bg-cyan-500/10 transition-colors">
+                                <svg class="w-4 h-4 text-cyan-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12"/></svg>
+                                <span class="text-xs font-medium text-cyan-400">Upload image</span>
+                                <input type="file" name="site_logo_file" accept="image/png,image/jpeg,image/svg+xml,image/webp" class="sr-only"
+                                       onchange="this.parentElement.querySelector('span').textContent = this.files[0]?.name ?? 'Upload image'">
+                            </label>
+                            @if($setting->value)
+                            <button type="button" onclick="document.getElementById('remove_logo').value='1';this.closest('.flex').querySelector('img')?.remove();this.remove();"
+                                    class="text-xs text-red-400 hover:text-red-300 text-left px-1">Remove logo</button>
+                            <input type="hidden" id="remove_logo" name="remove_logo" value="0">
+                            @endif
+                        </div>
+                    </div>
+                    @elseif($setting->type === 'boolean')
                     {{-- Toggle --}}
                     <label class="relative inline-flex items-center cursor-pointer">
                         <input type="hidden" name="{{ $setting->key }}" value="0">

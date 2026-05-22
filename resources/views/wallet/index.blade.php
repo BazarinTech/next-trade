@@ -1,5 +1,5 @@
 @extends('layouts.trading')
-@section('title', 'Wallet — Next Trade')
+@section('title', 'Wallet | Next Trade')
 @section('page-title', 'Wallet')
 @section('page-subtitle', 'Manage your balances and funds')
 

@@ -1,5 +1,5 @@
 @extends('layouts.trading')
-@section('title', 'Trading Bots — Next Trade')
+@section('title', 'Trading Bots | Next Trade')
 @section('page-title', 'Trading Bots')
 @section('page-subtitle', 'Automate your trading strategy')
 

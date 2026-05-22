@@ -1,5 +1,5 @@
 @extends('layouts.app')
-@section('title', 'Withdrawals — Admin')
+@section('title', 'Withdrawals | Admin')
 @section('page-title', 'Withdrawals')
 @section('page-subtitle', 'Review and process withdrawal requests')
 

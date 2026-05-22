@@ -1,5 +1,5 @@
 @extends('layouts.app')
-@section('title', 'Permissions — Admin')
+@section('title', 'Permissions | Admin')
 @section('page-title', 'Permissions')
 @section('page-subtitle', 'Platform permission registry')
 
@@ -28,7 +28,7 @@
 </div>
 
 {{-- Permissions grouped --}}
-@foreach($permissions->groupBy('group') as $group => $perms)
+@foreach($permissions as $group => $perms)
 <div class="mb-6">
     <p class="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-3 px-1">{{ $group ?? 'General' }}</p>
     <div class="rounded-2xl border overflow-hidden" :class="isDark ? 'bg-gray-900/60 border-gray-800/60' : 'bg-white border-gray-200 shadow-sm'">

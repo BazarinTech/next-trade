@@ -1,5 +1,5 @@
 @extends('layouts.app')
-@section('title', 'System Settings — Admin')
+@section('title', 'System Settings | Admin')
 @section('page-title', 'System Settings')
 @section('page-subtitle', 'Platform-wide configuration and feature flags')
 

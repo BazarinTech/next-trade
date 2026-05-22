@@ -50,8 +50,8 @@ export interface Trade {
 
 // ─── Engine adapter public interface ─────────────────────────────────────────
 
-export type TickCallback = (tick: PriceTick) => void;
-export type TradeCallback = (active: Trade[], completed: Trade[]) => void;
+export type TickCallback  = (tick: PriceTick) => void;
+export type TradeCallback = (active: Trade[], completed: Trade[], walletBalance: number) => void;
 
 export type Timeframe = 5 | 15 | 60;
 
@@ -72,8 +72,8 @@ export interface IEngineAdapter {
     getActiveTrades(): Trade[];
     /** Get completed trades (sync) */
     getCompletedTrades(): Trade[];
-    /** Seed initial trade state from server-side PHP render */
-    setInitialTrades(active: Trade[], completed: Trade[]): void;
+    /** Seed initial trade state and wallet balance from server-side PHP render */
+    setInitialTrades(active: Trade[], completed: Trade[], walletBalance: number): void;
     /** Start polling active trades from /trade/active */
     startTradePolling(): void;
     stopTradePolling(): void;

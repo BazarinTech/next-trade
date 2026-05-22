@@ -5,6 +5,7 @@ import {
     CrosshairMode,
     LineStyle,
     CandlestickSeries,
+    TickMarkType,
     type IChartApi,
     type ISeriesApi,
     type CandlestickData,
@@ -77,14 +78,37 @@ export function TradingChart({ asset, timeframe, activeTrades }: Props) {
                 rightOffset:    8,
                 fixLeftEdge:    false,
                 fixRightEdge:   false,
+                tickMarkFormatter: (ts: number, markType: TickMarkType) => {
+                    const d   = new Date(ts * 1000);
+                    const tz  = 'Africa/Nairobi';
+                    if (markType === TickMarkType.Year) {
+                        return d.toLocaleDateString('en-KE', { timeZone: tz, year: 'numeric' });
+                    }
+                    if (markType === TickMarkType.Month) {
+                        return d.toLocaleDateString('en-KE', { timeZone: tz, month: 'short', year: 'numeric' });
+                    }
+                    if (markType === TickMarkType.DayOfMonth) {
+                        return d.toLocaleDateString('en-KE', { timeZone: tz, month: 'short', day: '2-digit' });
+                    }
+                    // TickMarkType.Time and TimeWithSeconds — show date + time
+                    return d.toLocaleString('en-KE', {
+                        timeZone: tz, hour12: false,
+                        month: 'short', day: '2-digit',
+                        hour: '2-digit', minute: '2-digit',
+                        ...(markType === TickMarkType.TimeWithSeconds ? { second: '2-digit' } : {}),
+                    });
+                },
             },
             handleScroll: { mouseWheel: true, pressedMouseMove: true, horzTouchDrag: true },
             handleScale:  { mouseWheel: true, pinch: true },
             localization: {
                 timeFormatter: (ts: number) =>
-                    new Date(ts * 1000).toLocaleTimeString('en-KE', {
+                    new Date(ts * 1000).toLocaleString('en-KE', {
                         timeZone: 'Africa/Nairobi',
                         hour12:   false,
+                        year:     'numeric',
+                        month:    'short',
+                        day:      '2-digit',
                         hour:     '2-digit',
                         minute:   '2-digit',
                         second:   '2-digit',
@@ -137,6 +161,8 @@ export function TradingChart({ asset, timeframe, activeTrades }: Props) {
             const candles = builderRef.current.loadHistoricalTicks(ticks);
             if (candles.length > 0) {
                 seriesRef.current.setData(candles as CandlestickData[]);
+                // Stretch all historical candles to fill the full chart width
+                chartRef.current.timeScale().fitContent();
             }
 
             loadedRef.current = true;
@@ -147,6 +173,7 @@ export function TradingChart({ asset, timeframe, activeTrades }: Props) {
                 seriesRef.current.update(candle as CandlestickData);
             }
             pendingRef.current = [];
+            // Keep the latest candle visible at the right edge
             chartRef.current.timeScale().scrollToRealTime();
         });
 

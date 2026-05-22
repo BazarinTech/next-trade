@@ -1,6 +1,6 @@
 @extends('layouts.app')
 
-@section('title', 'Dashboard — Next Trade')
+@section('title', 'Dashboard | Next Trade')
 @section('page-title', 'Dashboard')
 @section('page-subtitle', 'Welcome back, {{ auth()->user()->name }}')
 
@@ -196,7 +196,7 @@
                 <p class="text-xl font-bold text-cyan-400">$67,842.50</p>
                 <p class="text-xs text-emerald-400 font-medium">+2.34% today</p>
             </div>
-            <div class="absolute bottom-3 right-3 text-xs text-gray-600">Live chart — Phase 3</div>
+            <div class="absolute bottom-3 right-3 text-xs text-gray-600">Live chart | Phase 3</div>
         </div>
     </div>
 

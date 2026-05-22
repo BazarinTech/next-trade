@@ -1,5 +1,5 @@
 @extends('layouts.app')
-@section('title', 'System Health — Admin')
+@section('title', 'System Health | Admin')
 @section('page-title', 'System Health')
 @section('page-subtitle', 'Platform diagnostics and status')
 
@@ -47,7 +47,7 @@
         <p class="text-xs text-gray-500 mb-1">Queue Driver</p>
         <p class="text-sm font-semibold" :class="isDark ? 'text-white' : 'text-gray-900'">{{ $queueDriver }}</p>
         <p class="text-xs mt-1 {{ $queueDriver === 'sync' ? 'text-amber-400' : 'text-cyan-400' }}">
-            {{ $queueDriver === 'sync' ? 'Synchronous (no worker needed)' : 'Async — run queue:work' }}
+            {{ $queueDriver === 'sync' ? 'Synchronous (no worker needed)' : 'Async | run queue:work' }}
         </p>
     </div>
 

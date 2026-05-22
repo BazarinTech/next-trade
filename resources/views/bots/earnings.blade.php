@@ -1,5 +1,5 @@
 @extends('layouts.trading')
-@section('title', 'Bot Earnings — Next Trade')
+@section('title', 'Bot Earnings | Next Trade')
 @section('page-title', 'Bot Earnings')
 @section('page-subtitle', 'Your daily simulated earnings history')
 

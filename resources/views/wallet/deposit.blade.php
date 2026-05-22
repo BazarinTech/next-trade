@@ -1,5 +1,5 @@
 @extends('layouts.trading')
-@section('title', 'Deposit — Next Trade')
+@section('title', 'Deposit | Next Trade')
 @section('page-title', 'Deposit Funds')
 @section('page-subtitle', 'Add funds to your wallet')
 
@@ -186,7 +186,7 @@
                 <div class="flex items-center gap-2">
                     <div class="flex-1 px-3 py-2.5 rounded-xl border font-mono text-xs break-all select-all"
                          :class="isDark ? 'border-gray-700 bg-gray-800/50 text-gray-300' : 'border-gray-200 bg-gray-50 text-gray-700'">
-                        {{ config('crypto.usdt_trc20_wallet_address') ?: 'Address not configured — contact support' }}
+                        {{ config('crypto.usdt_trc20_wallet_address') ?: 'Address not configured | contact support' }}
                     </div>
                     @if(config('crypto.usdt_trc20_wallet_address'))
                     <button type="button"

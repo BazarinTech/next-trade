@@ -22,8 +22,9 @@ class NextTradeEngineAdapter implements IEngineAdapter {
     private readonly tickSubs  = new Set<TickCallback>();
     private readonly tradeSubs = new Set<TradeCallback>();
 
-    private active:    Trade[] = [];
-    private completed: Trade[] = [];
+    private active:        Trade[] = [];
+    private completed:     Trade[] = [];
+    private walletBalance: number  = 0;
 
     private assetId:       number | null = null;
     private lastTickTime:  string | null = null;
@@ -33,9 +34,10 @@ class NextTradeEngineAdapter implements IEngineAdapter {
 
     // ─── Bootstrap ───────────────────────────────────────────────────────────
 
-    setInitialTrades(active: Trade[], completed: Trade[]): void {
-        this.active    = active;
-        this.completed = completed;
+    setInitialTrades(active: Trade[], completed: Trade[], walletBalance: number): void {
+        this.active        = active;
+        this.completed     = completed;
+        this.walletBalance = walletBalance;
     }
 
     // ─── Asset selection ─────────────────────────────────────────────────────
@@ -109,11 +111,12 @@ class NextTradeEngineAdapter implements IEngineAdapter {
         const data = await res.json();
         if (!data.success) throw new Error(data.message ?? 'Trade placement failed');
 
-        // Optimistically update local state
-        this.active = [...this.active, data.trade as Trade];
+        // Optimistically update local state and balance
+        this.active        = [...this.active, data.trade as Trade];
+        this.walletBalance = data.wallet_balance as number;
         this.notifyTrades();
 
-        return { trade: data.trade as Trade, walletBalance: data.wallet_balance as number };
+        return { trade: data.trade as Trade, walletBalance: this.walletBalance };
     }
 
     // ─── Trade polling ────────────────────────────────────────────────────────
@@ -140,11 +143,16 @@ class NextTradeEngineAdapter implements IEngineAdapter {
             const newIds   = new Set(this.active.map(t => t.id));
             const settled  = [...prevIds].filter(id => !newIds.has(id));
 
+            // Always capture the latest balance from the server
+            if (typeof data.wallet_balance === 'number') {
+                this.walletBalance = data.wallet_balance;
+            }
+
             if (settled.length > 0) {
                 try {
-                    const rRes         = await fetch('/trade/recent', { credentials: 'same-origin' });
-                    const recent       = await rRes.json();
-                    this.completed     = Array.isArray(recent) ? (recent as Trade[]) : [];
+                    const rRes     = await fetch('/trade/recent', { credentials: 'same-origin' });
+                    const recent   = await rRes.json();
+                    this.completed = Array.isArray(recent) ? (recent as Trade[]) : [];
                 } catch { /* ignore */ }
             }
 
@@ -205,7 +213,7 @@ class NextTradeEngineAdapter implements IEngineAdapter {
     }
 
     private notifyTrades(): void {
-        this.tradeSubs.forEach(fn => fn([...this.active], [...this.completed]));
+        this.tradeSubs.forEach(fn => fn([...this.active], [...this.completed], this.walletBalance));
     }
 }
 

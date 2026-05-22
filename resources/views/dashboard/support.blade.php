@@ -1,5 +1,5 @@
 @extends('layouts.trading')
-@section('title', 'Support — Next Trade')
+@section('title', 'Support | Next Trade')
 @section('page-title', 'Support')
 @section('page-subtitle', 'Get help when you need it')
 

@@ -1,5 +1,5 @@
 @extends('layouts.app')
-@section('title', 'Roles — Admin')
+@section('title', 'Roles | Admin')
 @section('page-title', 'Roles')
 @section('page-subtitle', 'Manage admin roles and permissions')
 
@@ -175,7 +175,7 @@
         <form method="POST" :action="`/admin/roles/${permRole.id}/permissions`">
             @csrf
             <div class="space-y-4">
-                @foreach($permissions->groupBy('group') as $group => $perms)
+                @foreach($permissions as $group => $perms)
                 <div>
                     <p class="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-2">{{ $group ?? 'General' }}</p>
                     <div class="space-y-1.5">

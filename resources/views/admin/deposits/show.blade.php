@@ -1,5 +1,5 @@
 @extends('layouts.app')
-@section('title', 'Deposit Detail — Admin')
+@section('title', 'Deposit Detail | Admin')
 @section('page-title', 'Deposit Detail')
 @section('page-subtitle', $deposit->account_reference)
 
@@ -92,7 +92,7 @@
         <div class="p-4 border-t" :class="isDark ? 'border-gray-800/60' : 'border-gray-100'">
             <div class="flex items-center gap-2 p-3 rounded-xl bg-emerald-500/10 border border-emerald-500/20">
                 <svg class="w-4 h-4 text-emerald-400 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"/></svg>
-                <p class="text-xs text-emerald-400">Wallet credited — double-approval prevented. credited_at locked.</p>
+                <p class="text-xs text-emerald-400">Wallet credited | double-approval prevented. credited_at locked.</p>
             </div>
         </div>
         @endif
@@ -265,7 +265,7 @@
             <div class="flex justify-between items-center">
                 <span class="text-xs text-gray-500">Double-Credit Safe</span>
                 <span class="text-xs {{ $deposit->isCredited() ? 'text-emerald-400' : 'text-amber-400' }}">
-                    {{ $deposit->isCredited() ? 'Yes — credited_at locked' : 'Not yet credited' }}
+                    {{ $deposit->isCredited() ? 'Yes | credited_at locked' : 'Not yet credited' }}
                 </span>
             </div>
         </div>

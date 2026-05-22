@@ -1,5 +1,5 @@
 @extends('layouts.app')
-@section('title', 'Withdrawal #'.$withdrawal->id.' — Admin')
+@section('title', 'Withdrawal #'.$withdrawal->id.' | Admin')
 @section('page-title', 'Withdrawal Detail')
 @section('page-subtitle', $withdrawal->account_reference)
 

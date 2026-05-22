@@ -1,5 +1,5 @@
 @extends('layouts.app')
-@section('title', 'Bot Management — Admin')
+@section('title', 'Bot Management | Admin')
 @section('page-title', 'Bot Management')
 @section('page-subtitle', 'Manage bot investment plans and monitor performance')
 

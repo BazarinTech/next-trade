@@ -1,5 +1,5 @@
 @extends('layouts.app')
-@section('title', 'Manage Users — Next Trade Admin')
+@section('title', 'Manage Users | Next Trade Admin')
 @section('page-title', 'Users')
 @section('page-subtitle', 'Manage platform users')
 

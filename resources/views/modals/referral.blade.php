@@ -36,7 +36,7 @@
         <div style="border-radius:12px;border:1px solid #1f2937;background:rgba(17,24,39,0.6);overflow:hidden;">
             <div style="padding:12px 16px;border-bottom:1px solid #1f2937;">
                 <p style="font-size:12px;font-weight:700;color:white;margin:0;">Your Referral Link</p>
-                <p style="font-size:10px;color:#6b7280;margin:3px 0 0;">Share this link — anyone who registers and deposits earns you {{ number_format(app(\App\Services\SettingsService::class)->get('referral_commission_rate', 3), 0) }}% commission.</p>
+                <p style="font-size:10px;color:#6b7280;margin:3px 0 0;">Share this link | anyone who registers and deposits earns you {{ number_format(app(\App\Services\SettingsService::class)->get('referral_commission_rate', 3), 0) }}% commission.</p>
             </div>
             <div style="padding:14px 16px;display:flex;flex-direction:column;gap:10px;">
 
@@ -80,7 +80,7 @@
                 @foreach([
                     ['1', '#06b6d4', 'Share your link', 'Send your referral link or code to friends.'],
                     ['2', '#8b5cf6', 'They register',   'Your friend signs up using your link.'],
-                    ['3', '#f59e0b', 'They deposit',     'Every time they recharge their live wallet, you earn ' . $rate . '% of the deposit — instantly credited to your live wallet.'],
+                    ['3', '#f59e0b', 'They deposit',     'Every time they recharge their live wallet, you earn ' . $rate . '% of the deposit | instantly credited to your live wallet.'],
                 ] as [$step, $color, $title, $desc])
                 <div style="display:flex;align-items:flex-start;gap:10px;">
                     <div style="width:24px;height:24px;border-radius:50%;background:{{ $color }};display:flex;align-items:center;justify-content:center;flex-shrink:0;">

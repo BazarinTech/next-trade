@@ -71,7 +71,7 @@
                         <p style="font-size:10px;font-weight:600;color:#6b7280;margin:0 0 6px;text-transform:uppercase;letter-spacing:.05em;">Our USDT TRC20 Address</p>
                         <div style="display:flex;gap:6px;align-items:center;">
                             <div style="flex:1;padding:8px 10px;border-radius:8px;border:1px solid #374151;background:rgba(31,41,55,0.5);font-family:monospace;font-size:10px;color:#d1d5db;word-break:break-all;">
-                                {{ config('crypto.usdt_trc20_wallet_address') ?: 'Not configured — contact support' }}
+                                {{ config('crypto.usdt_trc20_wallet_address') ?: 'Not configured | contact support' }}
                             </div>
                             @if(config('crypto.usdt_trc20_wallet_address'))
                             <button type="button" @click="copyAddress('{{ config('crypto.usdt_trc20_wallet_address') }}')"

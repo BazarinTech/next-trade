@@ -267,7 +267,7 @@
             <div @click="$store.modal.close()"
                  style="position:absolute;inset:0;background:rgba(0,0,0,0.78);backdrop-filter:blur(4px);"></div>
 
-            <!-- Centering wrapper — kept in a plain div (never x-show'd) so display:flex is never lost -->
+            <!-- Centering wrapper | kept in a plain div (never x-show'd) so display:flex is never lost -->
             <div class="nt-modal-centering">
                 <div class="nt-modal-box">
 
@@ -278,7 +278,7 @@
                         <p style="font-size:11px;color:#6b7280;margin:0;">Loading…</p>
                     </div>
 
-                    <!-- Injected content — scroll container via CSS #nt-modal-body rule -->
+                    <!-- Injected content | scroll container via CSS #nt-modal-body rule -->
                     <div id="nt-modal-body"
                          :style="$store.modal.loading ? 'display:none' : 'display:block'"></div>
 
@@ -341,7 +341,7 @@
             <!-- Right: mode switcher + balance + notifications + profile -->
             <div style="display:flex; align-items:center; gap:6px; flex-shrink:0;">
 
-                <!-- Demo/Live switcher (hidden on mobile — accessible via hamburger menu) -->
+                <!-- Demo/Live switcher (hidden on mobile | accessible via hamburger menu) -->
                 <div class="nt-mode-switcher" style="display:flex; background:rgba(17,24,39,1); border-radius:8px; padding:2px; gap:1px;">
                     @foreach(['demo','live'] as $m)
                     <form method="POST" action="{{ route('wallet.mode') }}" style="margin:0;">

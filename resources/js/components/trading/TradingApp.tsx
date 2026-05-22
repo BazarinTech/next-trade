@@ -68,13 +68,14 @@ export function TradingApp({
 
     // ─── Bootstrap ────────────────────────────────────────────────────────────
     useEffect(() => {
-        adapter.setInitialTrades(initialActive, initialRecent);
+        adapter.setInitialTrades(initialActive, initialRecent, initialBalance);
         adapter.setAsset(assets[0]?.id);
         adapter.startTradePolling();
-        const unsubTrade = adapter.subscribeToTrades((newActive, newCompleted) => {
+        const unsubTrade = adapter.subscribeToTrades((newActive, newCompleted, newBalance) => {
             const prevLen = active.length;
             setActive(newActive);
             setCompleted(newCompleted);
+            setBalance(newBalance);
             if (prevLen > newActive.length) showToast('Trade settled — check Closed tab.', 'ok');
         });
         const unsubTick = adapter.subscribeToTicks(tick => setCurrentPrice(tick.price));

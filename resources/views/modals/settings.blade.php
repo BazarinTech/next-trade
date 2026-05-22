@@ -150,7 +150,7 @@ function settingsModalData(initialTheme) {
         },
 
         applyTheme(val) {
-            /* Light mode CSS is not yet available — keep dark class always.
+            /* Light mode CSS is not yet available | keep dark class always.
                Preference is saved to DB for when light mode is introduced. */
             document.documentElement.classList.add('dark');
         },

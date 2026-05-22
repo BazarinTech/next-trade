@@ -1,5 +1,5 @@
 @extends('layouts.app')
-@section('title', 'Asset Management — Admin')
+@section('title', 'Asset Management | Admin')
 @section('page-title', 'Asset Management')
 @section('page-subtitle', 'Manage tradeable instruments and market parameters')
 

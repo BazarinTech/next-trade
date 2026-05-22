@@ -24,7 +24,7 @@ class TradingEngineService
 
     // ─── Price Generation ─────────────────────────────────────────────────────
 
-    public function generateNextTick(TradingAsset $asset, ?\Carbon\Carbon $tickTime = null): PriceTick
+    public function generateNextTick(TradingAsset $asset, ?\Carbon\Carbon $tickTime = null, ?string $biasDirection = null): PriceTick
     {
         $currentPrice = (float) $asset->current_price;
         $config       = $this->simConfig->getActiveConfig();
@@ -34,17 +34,24 @@ class TradingEngineService
         $multiplier     = $config ? (float) $config->volatility_multiplier : 1.0;
         $volatility     = $baseVolatility * $multiplier;
 
-        // Apply trend bias scaled by trend_strength
-        $trendStrength = $config ? (float) $config->trend_strength : 0.5;
-        $biasFactor    = match ($asset->trend_bias) {
-            'bullish' => 0.0002 * $trendStrength,
-            'bearish' => -0.0002 * $trendStrength,
-            default   => 0.0,
-        };
+        $z = $this->randomNormal();
 
-        $z             = $this->randomNormal();
-        $changePercent = ($z * $volatility) + $biasFactor;
-        $newPrice      = $currentPrice * (1.0 + $changePercent);
+        if ($biasDirection !== null) {
+            // Settlement tick: force direction, keep realistic magnitude
+            $magnitude     = abs($z * $volatility);
+            $changePercent = $biasDirection === 'up' ? $magnitude : -$magnitude;
+        } else {
+            // Normal tick: apply asset trend bias scaled by trend_strength
+            $trendStrength = $config ? (float) $config->trend_strength : 0.5;
+            $biasFactor    = match ($asset->trend_bias) {
+                'bullish' => 0.0002 * $trendStrength,
+                'bearish' => -0.0002 * $trendStrength,
+                default   => 0.0,
+            };
+            $changePercent = ($z * $volatility) + $biasFactor;
+        }
+
+        $newPrice = $currentPrice * (1.0 + $changePercent);
 
         // Clamp to sane range (10%–500% of base)
         $base     = (float) $asset->base_price;
@@ -152,15 +159,28 @@ class TradingEngineService
             $asset  = $locked->tradingAsset;
             $config = $this->simConfig->getActiveConfig();
 
-            // 1. Generate a normal market tick (chart continuity)
-            $this->generateNextTick($asset);
+            // 1. Calculate market sentiment across all open trades for this asset.
+            //    Returns: [sentiment 0–1, buyVolume, sellVolume]
+            //    sentiment > 0.5 = majority buying, < 0.5 = majority selling, 0.5 = balanced/no data
+            [$sentiment, , ] = $this->calculateSentiment($asset, $locked->id);
+
+            // 2. Compute sentiment-adjusted win probability.
+            //    trend_strength from SimulationSetting controls how aggressively
+            //    the engine moves against the majority position.
+            $baseWinProb = $config ? (float) $config->win_probability / 100 : 0.5;
+            $sensitivity = $config ? (float) $config->trend_strength : 0.5;
+            $winProb     = $this->adjustedWinProbability($baseWinProb, $sensitivity, $sentiment, $locked->direction);
+            $isWin       = (mt_rand() / mt_getrandmax()) < $winProb;
+
+            // 3. Determine tick direction that is consistent with the outcome,
+            //    then generate the settlement tick (saves to price_ticks — all users see it).
+            $shouldPriceGoUp = ($isWin && $locked->direction === 'buy')
+                || (! $isWin && $locked->direction === 'sell');
+
+            $this->generateNextTick($asset, null, $shouldPriceGoUp ? 'up' : 'down');
             $asset->refresh();
 
-            // 2. Determine outcome via win probability — server-side, opaque to frontend
-            $winProbability = $config ? (float) $config->win_probability / 100 : 0.5;
-            $isWin          = (mt_rand() / mt_getrandmax()) < $winProbability;
-
-            // 3. Derive a settlement price that confirms the outcome
+            // 4. Derive a settlement price consistent with the outcome
             $entryPrice   = (float) $locked->entry_price;
             $currentPrice = (float) $asset->current_price;
             $baseVol      = (float) $asset->volatility;
@@ -172,16 +192,13 @@ class TradingEngineService
                 $currentPrice * ($baseVol * $volMult) * 0.1
             );
 
-            $shouldPriceGoUp = ($isWin && $locked->direction === 'buy')
-                || (! $isWin && $locked->direction === 'sell');
-
             $exitPrice = $shouldPriceGoUp
                 ? $entryPrice + $pip
                 : $entryPrice - $pip;
 
             $exitPrice = max(0.00000001, round($exitPrice, $this->pricePrecision($asset)));
 
-            // 4. Calculate displacement and profit
+            // 5. Calculate displacement and profit
             $stake        = (float) $locked->stake_amount;
             $displacement = $this->calculateDisplacement($entryPrice, $exitPrice);
 
@@ -198,7 +215,7 @@ class TradingEngineService
                 'lost' => [-$stake, 0.0],
             };
 
-            // 5. Persist trade result
+            // 6. Persist trade result
             $locked->exit_price   = $exitPrice;
             $locked->displacement = $displacement;
             $locked->profit_loss  = $profitLoss;
@@ -207,7 +224,7 @@ class TradingEngineService
             $locked->closed_at    = now();
             $locked->save();
 
-            // 6. Update wallet
+            // 7. Update wallet
             $wallet = $locked->wallet;
 
             if ($status === 'won') {
@@ -221,7 +238,7 @@ class TradingEngineService
             }
             // Loss: stake already debited on placement — nothing more to do
 
-            // Notify user of trade outcome
+            // 8. Notify user of trade outcome
             $user = $locked->wallet->user;
             if ($status === 'won') {
                 $this->notifier->send($user, 'trade_won', 'Trade Won! 🎉',
@@ -294,6 +311,62 @@ class TradingEngineService
             'lost' => ['status' => 'lost', 'profit_loss' => -$stake,  'payout' => 0.0,              'displacement' => $displacement],
             'draw' => ['status' => 'draw', 'profit_loss' => 0.0,      'payout' => $stake,            'displacement' => $displacement],
         };
+    }
+
+    // ─── Sentiment ────────────────────────────────────────────────────────────
+
+    /**
+     * Returns [sentiment, buyVolume, sellVolume] for all open trades on the asset.
+     * sentiment: 0.0 = all sell, 0.5 = balanced / no data, 1.0 = all buy.
+     * The settling trade is excluded so it does not count itself.
+     */
+    private function calculateSentiment(TradingAsset $asset, int $excludeTradeId): array
+    {
+        $rows = Trade::where('trading_asset_id', $asset->id)
+            ->where('status', 'open')
+            ->where('id', '!=', $excludeTradeId)
+            ->selectRaw('direction, SUM(stake_amount) as volume')
+            ->groupBy('direction')
+            ->get()
+            ->keyBy('direction');
+
+        $buyVolume  = (float) ($rows->get('buy')?->volume  ?? 0);
+        $sellVolume = (float) ($rows->get('sell')?->volume ?? 0);
+        $total      = $buyVolume + $sellVolume;
+
+        if ($total <= 0) {
+            return [0.5, 0.0, 0.0];
+        }
+
+        return [$buyVolume / $total, $buyVolume, $sellVolume];
+    }
+
+    /**
+     * Adjusts the base win probability based on platform sentiment.
+     *
+     * If this trade is WITH the majority position → reduce win probability.
+     * If this trade is AGAINST the majority     → increase win probability.
+     *
+     * $sensitivity (trend_strength) controls how aggressively sentiment shifts
+     * the probability: 0.0 = no effect, 1.0 = maximum house edge.
+     *
+     * At full sensitivity + full imbalance the adjustment is ±50% of base.
+     */
+    private function adjustedWinProbability(float $baseProb, float $sensitivity, float $sentiment, string $direction): float
+    {
+        $imbalance = abs($sentiment - 0.5) * 2; // 0.0 (balanced) → 1.0 (all one side)
+
+        $majorityBuying      = $sentiment > 0.5;
+        $tradingWithMajority = ($direction === 'buy' &&   $majorityBuying)
+                            || ($direction === 'sell' && ! $majorityBuying);
+
+        $adjustment = $sensitivity * $imbalance * 0.5;
+
+        $winProb = $tradingWithMajority
+            ? $baseProb - $adjustment
+            : $baseProb + $adjustment;
+
+        return max(0.05, min(0.95, $winProb));
     }
 
     private function pricePrecision(TradingAsset $asset): int

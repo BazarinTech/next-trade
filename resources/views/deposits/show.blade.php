@@ -1,5 +1,5 @@
 @extends('layouts.trading')
-@section('title', 'Deposit Status — Next Trade')
+@section('title', 'Deposit Status | Next Trade')
 @section('page-title', 'Deposit Status')
 @section('page-subtitle', 'Track your deposit progress')
 

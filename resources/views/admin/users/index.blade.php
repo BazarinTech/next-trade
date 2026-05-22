@@ -1,5 +1,5 @@
 @extends('layouts.app')
-@section('title', 'Users — Admin')
+@section('title', 'Users | Admin')
 @section('page-title', 'Users')
 @section('page-subtitle', 'Manage platform users')
 

@@ -4,7 +4,6 @@ namespace App\Http\Controllers\Auth;
 
 use App\Http\Controllers\Controller;
 use App\Models\User;
-use App\Services\WalletService;
 use Illuminate\Auth\Events\Registered;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -15,8 +14,6 @@ use Illuminate\View\View;
 
 class RegisteredUserController extends Controller
 {
-    public function __construct(private WalletService $walletService) {}
-
     public function create(Request $request): View
     {
         // Persist ref code so it survives the form POST
@@ -50,8 +47,6 @@ class RegisteredUserController extends Controller
             'password'    => Hash::make($request->password),
             'referred_by' => $referrer?->id,
         ]);
-
-        $this->walletService->createDefaultWallets($user);
 
         session()->forget('referral_code');
 

@@ -1,5 +1,5 @@
 @extends('layouts.app')
-@section('title', 'Deposits — Admin')
+@section('title', 'Deposits | Admin')
 @section('page-title', 'Deposits')
 @section('page-subtitle', 'Monitor all deposit transactions')
 

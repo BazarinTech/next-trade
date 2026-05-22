@@ -1,6 +1,6 @@
 @extends('layouts.trading')
 
-@section('title', 'Trade — Next Trade')
+@section('title', 'Trade | Next Trade')
 @section('overflow', 'hidden')
 
 @section('content')

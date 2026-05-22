@@ -1,5 +1,5 @@
 @extends('layouts.trading')
-@section('title', 'Bot Investments — Next Trade')
+@section('title', 'Bot Investments | Next Trade')
 @section('page-title', 'Bot Investments')
 @section('page-subtitle', 'Automated simulated investment portfolios')
 
@@ -248,7 +248,7 @@
                             <span class="text-[10px] px-2 py-0.5 rounded-full bg-{{ $sc }}-500/10 text-{{ $sc }}-400 border border-{{ $sc }}-500/20">{{ ucfirst($inv->status) }}</span>
                         </td>
                         <td class="px-5 py-3 text-xs text-gray-500">
-                            {{ $inv->started_at->format('M d') }} — {{ $inv->updated_at->format('M d, Y') }}
+                            {{ $inv->started_at->format('M d') }} | {{ $inv->updated_at->format('M d, Y') }}
                         </td>
                     </tr>
                     @endforeach

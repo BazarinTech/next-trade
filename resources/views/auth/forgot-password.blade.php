@@ -1,5 +1,5 @@
 <x-guest-layout>
-    @section('title', 'Reset Password — Next Trade')
+    @section('title', 'Reset Password | Next Trade')
 
     <div class="glassmorphism rounded-2xl border p-8"
          style="background: rgba(17,24,39,0.8); border-color: rgba(255,255,255,0.06);">

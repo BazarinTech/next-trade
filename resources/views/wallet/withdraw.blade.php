@@ -1,5 +1,5 @@
 @extends('layouts.trading')
-@section('title', 'Withdraw — Next Trade')
+@section('title', 'Withdraw | Next Trade')
 @section('page-title', 'Withdraw Funds')
 @section('page-subtitle', 'Withdraw from your live wallet')
 

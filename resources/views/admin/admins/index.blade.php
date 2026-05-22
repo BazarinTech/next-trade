@@ -1,5 +1,5 @@
 @extends('layouts.app')
-@section('title', 'Admins — Admin')
+@section('title', 'Admins | Admin')
 @section('page-title', 'Admins')
 @section('page-subtitle', 'Manage admin accounts and roles')
 

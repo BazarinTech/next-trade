@@ -1,5 +1,5 @@
 @extends('layouts.app')
-@section('title', 'Admin Dashboard — Next Trade')
+@section('title', 'Admin Dashboard | Next Trade')
 @section('page-title', 'Admin Dashboard')
 @section('page-subtitle', 'Platform overview and management')
 

@@ -1,6 +1,6 @@
 {{--
     Toast notification system.
-    Usage: <x-toast /> in layout — reads from session flash.
+    Usage: <x-toast /> in layout | reads from session flash.
     Alpine.js powered, auto-dismiss after 4s.
 --}}
 <div

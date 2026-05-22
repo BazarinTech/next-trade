@@ -123,24 +123,31 @@
     </div>
 
     {{-- ══════════════════════════ MY INVESTMENTS TAB ════════════════════════════ --}}
-    <div x-show="!selectedPlan && activeTab==='investments'" x-cloak style="padding:16px 20px;display:flex;flex-direction:column;gap:16px;">
+    <div x-show="!selectedPlan && activeTab==='investments'" x-cloak style="display:flex;flex-direction:column;">
 
-        {{-- Portfolio stats --}}
-        <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;">
+        {{-- Portfolio summary strip --}}
+        <div style="padding:14px 20px;border-bottom:1px solid #1f2937;display:grid;grid-template-columns:1fr 1fr 1fr 1fr;gap:0;">
             @foreach([
-                ['Total Invested', '$'.number_format($totalInvested, 2), '#22d3ee'],
-                ['Total Earned',   '$'.number_format($totalEarned, 2),   '#34d399'],
-                ["Today's Earning",'$'.number_format($todayEarnings, 2), '#a78bfa'],
-                ['Running Bots',   $active->count().' active',           '#fbbf24'],
-            ] as [$lbl, $val, $clr])
-            <div style="padding:14px;border-radius:10px;border:1px solid #1f2937;background:rgba(17,24,39,0.6);">
-                <p style="font-size:10px;color:#6b7280;margin:0 0 5px;text-transform:uppercase;letter-spacing:.04em;">{{ $lbl }}</p>
-                <p style="font-size:17px;font-weight:700;color:{{ $clr }};margin:0;">{{ $val }}</p>
+                ['Invested',       '$'.number_format($totalInvested, 2),  '#22d3ee'],
+                ['Earned',         '$'.number_format($totalEarned, 2),    '#34d399'],
+                ["Today",          '$'.number_format($todayEarnings, 2),  '#a78bfa'],
+                ['Running',        $active->count().' bots',              '#fbbf24'],
+            ] as $i => [$lbl, $val, $clr])
+            <div style="padding:0 12px;{{ $i > 0 ? 'border-left:1px solid #1f2937;' : '' }}">
+                <p style="font-size:9px;color:#4b5563;margin:0 0 4px;text-transform:uppercase;letter-spacing:.05em;font-weight:600;">{{ $lbl }}</p>
+                <p style="font-size:14px;font-weight:700;color:{{ $clr }};margin:0;white-space:nowrap;">{{ $val }}</p>
             </div>
             @endforeach
         </div>
 
+        {{-- Section header --}}
+        <div style="padding:14px 20px 10px;display:flex;align-items:center;justify-content:space-between;">
+            <p style="font-size:11px;font-weight:700;color:#9ca3af;margin:0;text-transform:uppercase;letter-spacing:.06em;">Active Investments</p>
+            <span style="font-size:10px;padding:2px 8px;border-radius:20px;font-weight:600;background:rgba(6,182,212,0.1);color:#22d3ee;border:1px solid rgba(6,182,212,0.2);">{{ $active->count() }} running</span>
+        </div>
+
         {{-- Investment cards --}}
+        <div style="padding:0 20px 20px;display:flex;flex-direction:column;gap:12px;">
         @if($active->count())
         <div style="display:flex;flex-direction:column;gap:12px;">
             @foreach($active as $inv)
@@ -279,7 +286,7 @@
                         <div x-show="cancelled{{ $inv->id }}" x-cloak
                              style="display:flex;align-items:center;gap:6px;padding:8px 12px;border-radius:8px;background:rgba(16,185,129,0.07);border:1px solid rgba(16,185,129,0.2);">
                             <svg style="width:13px;height:13px;color:#34d399;flex-shrink:0;" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>
-                            <span style="font-size:11px;color:#34d399;font-weight:500;">Investment cancelled — principal refunded.</span>
+                            <span style="font-size:11px;color:#34d399;font-weight:500;">Investment cancelled | principal refunded.</span>
                         </div>
 
                     </div>
@@ -301,8 +308,7 @@
             </button>
         </div>
         @endif
-
-        <div style="height:4px;"></div>
+        </div>{{-- /cards wrapper --}}
     </div>
 
     {{-- ═══════════════════════════ INVEST FORM PANEL ════════════════════════════ --}}

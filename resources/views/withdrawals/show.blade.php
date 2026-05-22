@@ -1,5 +1,5 @@
 @extends('layouts.trading')
-@section('title', 'Withdrawal — Next Trade')
+@section('title', 'Withdrawal | Next Trade')
 @section('page-title', 'Withdrawal Detail')
 @section('page-subtitle', $withdrawal->account_reference)
 

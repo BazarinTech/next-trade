@@ -1,5 +1,5 @@
 @extends('layouts.trading')
-@section('title', 'Profile — Next Trade')
+@section('title', 'Profile | Next Trade')
 @section('page-title', 'Profile')
 @section('page-subtitle', 'Manage your account details')
 

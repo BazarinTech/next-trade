@@ -48,11 +48,8 @@ class MarketController extends Controller
         }
 
         $ticks = $asset->priceTicks()
-            ->orderByDesc('tick_time')
-            ->limit(120)
+            ->orderBy('tick_time')
             ->get()
-            ->reverse()
-            ->values()
             ->map(fn ($t) => [
                 'price'     => (float) $t->price,
                 'direction' => $t->direction,

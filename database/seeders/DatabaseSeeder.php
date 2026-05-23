@@ -18,6 +18,7 @@ class DatabaseSeeder extends Seeder
             TradingAssetsSeeder::class,
             SimulationSettingsSeeder::class,
             BotPlansSeeder::class,
+            SystemSettingsSeeder::class,
         ]);
     }
 }

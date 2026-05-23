@@ -64,6 +64,6 @@ class BotPlansSeeder extends Seeder
             BotPlan::updateOrCreate(['slug' => $plan['slug']], $plan);
         }
 
-        $this->command->info('  Seeded 4 bot plans (3 active, 1 inactive).');
+        $this->command?->info('  Seeded 4 bot plans (3 active, 1 inactive).');
     }
 }

@@ -15,10 +15,10 @@ class DatabaseSeeder extends Seeder
     public function run(): void
     {
         $this->call([
+            RolesAndPermissionsSeeder::class,
             TradingAssetsSeeder::class,
             SimulationSettingsSeeder::class,
             BotPlansSeeder::class,
-            SystemSettingsSeeder::class,
         ]);
     }
 }

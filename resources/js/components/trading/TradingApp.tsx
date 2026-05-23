@@ -101,7 +101,20 @@ export function TradingApp({
         toastTimer.current = setTimeout(() => setToast(null), 4000);
     }
 
-    const assetActiveTrades = active.filter(t => t.asset.id === selected?.id);
+    // ─── Guard: no assets seeded yet (must be after all hooks) ──────────────
+    if (!selected) {
+        return (
+            <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', height: '100%', gap: 12, color: '#6b7280' }}>
+                <svg style={{ width: 36, height: 36, color: '#374151' }} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6"/>
+                </svg>
+                <p style={{ fontSize: 13, margin: 0 }}>No trading assets available.</p>
+                <p style={{ fontSize: 11, margin: 0, color: '#4b5563' }}>Please contact the administrator.</p>
+            </div>
+        );
+    }
+
+    const assetActiveTrades = active.filter(t => t.asset.id === selected.id);
 
     // ─── Toast ────────────────────────────────────────────────────────────────
     const toastEl = toast ? (
@@ -187,19 +200,6 @@ export function TradingApp({
             activeTrades={assetActiveTrades}
         />
     );
-
-    // ─── Guard: no assets seeded yet ─────────────────────────────────────────
-    if (!selected) {
-        return (
-            <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', height: '100%', gap: 12, color: '#6b7280' }}>
-                <svg style={{ width: 36, height: 36, color: '#374151' }} fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6"/>
-                </svg>
-                <p style={{ fontSize: 13, margin: 0 }}>No trading assets available.</p>
-                <p style={{ fontSize: 11, margin: 0, color: '#4b5563' }}>Please contact the administrator.</p>
-            </div>
-        );
-    }
 
     // ═══════════════════════════════════════════════════════════════════════════
     // MOBILE layout  (< 768px)

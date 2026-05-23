@@ -59,6 +59,7 @@ Route::middleware(['auth'])->group(function () {
     Route::get('/modal/settings',  [ModalController::class, 'settings'])->name('modal.settings');
     Route::get('/modal/logout',    [ModalController::class, 'logout'])->name('modal.logout');
     Route::get('/modal/referral',  [ModalController::class, 'referral'])->name('modal.referral');
+    Route::get('/modal/support',   [ModalController::class, 'support'])->name('modal.support');
 
     // Bots (index and earnings redirect to trade page where modal can be opened)
     Route::get('/bots',                                    fn() => redirect()->route('trade.index'))->name('bots.index');

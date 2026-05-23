@@ -231,6 +231,10 @@
                         <svg style="width:15px;height:15px;" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z"/></svg>
                         Invite &amp; Earn
                     </button>
+                    <button @click="sidebarOpen=false;$nextTick(()=>$store.modal.open('support'))" style="display:flex; align-items:center; gap:12px; padding:10px 10px; border-radius:10px; font-size:13px; font-weight:500; color:#9ca3af; background:transparent; border:none; cursor:pointer; width:100%; text-align:left; transition:background 0.15s;" onmouseover="this.style.background='rgba(31,41,55,0.8)';this.style.color='white'" onmouseout="this.style.background='transparent';this.style.color='#9ca3af'">
+                        <svg style="width:15px;height:15px;" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M18.364 5.636l-3.536 3.536m0 5.656l3.536 3.536M9.172 9.172L5.636 5.636m3.536 9.192l-3.536 3.536M21 12a9 9 0 11-18 0 9 9 0 0118 0zm-5 0a4 4 0 11-8 0 4 4 0 018 0z"/></svg>
+                        Support
+                    </button>
                     <button @click="sidebarOpen=false;$nextTick(()=>$store.modal.open('settings'))" style="display:flex; align-items:center; gap:12px; padding:10px 10px; border-radius:10px; font-size:13px; font-weight:500; color:#9ca3af; background:transparent; border:none; cursor:pointer; width:100%; text-align:left; transition:background 0.15s;" onmouseover="this.style.background='rgba(31,41,55,0.8)';this.style.color='white'" onmouseout="this.style.background='transparent';this.style.color='#9ca3af'">
                         <svg style="width:15px;height:15px;" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
                         Settings
@@ -334,6 +338,10 @@
                     <svg style="width:11px;height:11px;" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z"/></svg>
                     Wallet
                 </button>
+                <button @click="$store.modal.open('support')" class="nt-nav-link" style="background:none;border:none;cursor:pointer;">
+                    <svg style="width:11px;height:11px;" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M18.364 5.636l-3.536 3.536m0 5.656l3.536 3.536M9.172 9.172L5.636 5.636m3.536 9.192l-3.536 3.536M21 12a9 9 0 11-18 0 9 9 0 0118 0zm-5 0a4 4 0 11-8 0 4 4 0 018 0z"/></svg>
+                    Support
+                </button>
             </nav>
 
             <!-- Right: mode switcher + balance + notifications + profile -->
@@ -430,19 +438,6 @@
         <!-- ── Page content ───────────────────────────────────────────── -->
         <div style="flex:1; min-height:0; overflow:@yield('overflow', 'auto')">
 
-            @if(session('success'))
-            <div style="margin:12px 16px 0; padding:10px 14px; border-radius:10px; font-size:12px; font-weight:500; display:flex; align-items:center; gap:8px; background:rgba(16,185,129,0.1); border:1px solid rgba(16,185,129,0.25); color:#34d399;">
-                <svg style="width:14px;height:14px;flex-shrink:0;" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
-                {{ session('success') }}
-            </div>
-            @endif
-            @if(session('error'))
-            <div style="margin:12px 16px 0; padding:10px 14px; border-radius:10px; font-size:12px; font-weight:500; display:flex; align-items:center; gap:8px; background:rgba(239,68,68,0.1); border:1px solid rgba(239,68,68,0.25); color:#f87171;">
-                <svg style="width:14px;height:14px;flex-shrink:0;" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
-                {{ session('error') }}
-            </div>
-            @endif
-
             @yield('content')
         </div>
 
@@ -453,6 +448,7 @@
             if (typeof feather !== 'undefined') feather.replace();
         });
     </script>
+    <x-toast />
     @stack('scripts')
     <script>
         window.addEventListener('nt:balance', function (e) {

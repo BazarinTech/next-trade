@@ -11,6 +11,7 @@ use App\Services\BotInvestmentService;
 use App\Services\CurrencyService;
 use App\Services\NotificationService;
 use App\Services\ReferralService;
+use App\Services\SettingsService;
 use App\Services\WalletService;
 
 class ModalController extends Controller
@@ -115,6 +116,14 @@ class ModalController extends Controller
         return view('modals.referral', compact(
             'commissions', 'totalEarned', 'totalInvited', 'activeCount', 'referralUrl'
         ));
+    }
+
+    public function support(SettingsService $settings)
+    {
+        return view('modals.support', [
+            'supportChatUrl' => $settings->get('support_chat_url', ''),
+            'communityUrl'   => $settings->get('community_url', ''),
+        ]);
     }
 
     public function logout()

@@ -9,7 +9,7 @@
         add(type, message) {
             const id = Date.now();
             this.toasts.push({ id, type, message, visible: true });
-            setTimeout(() => this.remove(id), 4000);
+            setTimeout(() => this.remove(id), 5000);
         },
         remove(id) {
             const t = this.toasts.find(t => t.id === id);
@@ -24,7 +24,7 @@
         @if(session('info'))    add('info',    @js(session('info'))); @endif
     "
     @toast.window="add($event.detail.type, $event.detail.message)"
-    class="fixed bottom-5 right-5 z-[100] flex flex-col gap-2 w-80 pointer-events-none"
+    class="fixed top-5 right-5 z-[100] flex flex-col gap-2 w-80 pointer-events-none"
 >
     <template x-for="toast in toasts" :key="toast.id">
         <div

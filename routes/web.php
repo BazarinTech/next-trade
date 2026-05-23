@@ -29,12 +29,8 @@ use App\Http\Controllers\WalletController;
 use App\Http\Controllers\WithdrawalController;
 use Illuminate\Support\Facades\Route;
 
-// Public landing — goes straight to the trading terminal for authenticated users
-Route::get('/', function () {
-    return auth()->check()
-        ? redirect()->route('trade.index')
-        : redirect()->route('login');
-});
+// Landing page — trading terminal for authenticated users, marketing page for guests
+Route::get('/', [\App\Http\Controllers\LandingController::class, 'index'])->name('landing');
 
 // ─── Authenticated Routes ─────────────────────────────────────────────────────
 Route::middleware(['auth'])->group(function () {

@@ -15,6 +15,11 @@ class TradeController extends Controller
 
     public function index(): View
     {
+        // Auto-seed assets if none exist (handles first-deploy or failed seeder)
+        if (TradingAsset::count() === 0) {
+            app(\Database\Seeders\TradingAssetsSeeder::class)->run($this->engine);
+        }
+
         $assets     = TradingAsset::where('is_active', true)->orderBy('sort_order')->get();
         $walletMode = session('wallet_mode', 'demo');
         $wallet     = auth()->user()->activeWallet($walletMode);

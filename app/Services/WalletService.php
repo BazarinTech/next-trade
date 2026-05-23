@@ -34,32 +34,27 @@ class WalletService
     public function createDefaultWallets(User $user): void
     {
         DB::transaction(function () use ($user) {
-            $demo = Wallet::create([
-                'user_id'  => $user->id,
-                'type'     => 'demo',
-                'currency' => 'USD',
-                'balance'  => self::DEMO_STARTING_BALANCE,
-                'status'   => 'active',
-            ]);
+            $demo = Wallet::firstOrCreate(
+                ['user_id' => $user->id, 'type' => 'demo'],
+                ['currency' => 'USD', 'balance' => self::DEMO_STARTING_BALANCE, 'status' => 'active']
+            );
 
-            // Record the initial demo credit as an adjustment
-            $this->recordTransaction($demo, [
-                'type'           => 'adjustment',
-                'amount'         => self::DEMO_STARTING_BALANCE,
-                'balance_before' => '0',
-                'balance_after'  => (string) self::DEMO_STARTING_BALANCE,
-                'description'    => 'Demo account funded',
-                'status'         => 'successful',
-                'metadata'       => ['source' => 'registration'],
-            ]);
+            if ($demo->wasRecentlyCreated) {
+                $this->recordTransaction($demo, [
+                    'type'           => 'adjustment',
+                    'amount'         => self::DEMO_STARTING_BALANCE,
+                    'balance_before' => '0',
+                    'balance_after'  => (string) self::DEMO_STARTING_BALANCE,
+                    'description'    => 'Demo account funded',
+                    'status'         => 'successful',
+                    'metadata'       => ['source' => 'registration'],
+                ]);
+            }
 
-            Wallet::create([
-                'user_id'  => $user->id,
-                'type'     => 'live',
-                'currency' => 'USD',
-                'balance'  => 0,
-                'status'   => 'active',
-            ]);
+            Wallet::firstOrCreate(
+                ['user_id' => $user->id, 'type' => 'live'],
+                ['currency' => 'USD', 'balance' => 0, 'status' => 'active']
+            );
         });
     }
 

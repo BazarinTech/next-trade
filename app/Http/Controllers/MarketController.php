@@ -41,15 +41,30 @@ class MarketController extends Controller
 
     public function ticks(TradingAsset $asset): JsonResponse
     {
-        // Auto-seed initial ticks if none exist yet
+        // Seed initial history if table is empty
         if ($asset->priceTicks()->count() < 2) {
             $this->engine->generateTicksForAsset($asset, 60);
             $asset->refresh();
         }
 
+        // Generate a new live tick if the latest is more than 2 s old
+        $latest = $asset->priceTicks()->latest('tick_time')->first();
+        if (! $latest || $latest->tick_time->lt(now()->subSeconds(2))) {
+            $this->engine->generateNextTick($asset);
+        }
+
+        // Prune ticks older than 30 minutes to keep the table lean
+        $asset->priceTicks()
+            ->where('tick_time', '<', now()->subMinutes(30))
+            ->delete();
+
+        // Return the 300 most recent ticks in ascending order for the chart
         $ticks = $asset->priceTicks()
-            ->orderBy('tick_time')
+            ->orderByDesc('tick_time')
+            ->limit(300)
             ->get()
+            ->sortBy('tick_time')
+            ->values()
             ->map(fn ($t) => [
                 'price'     => (float) $t->price,
                 'direction' => $t->direction,

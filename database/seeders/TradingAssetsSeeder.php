@@ -76,7 +76,7 @@ class TradingAssetsSeeder extends Seeder
             // Generate 60 initial history ticks spread over the last 6 minutes
             $this->generateHistoryTicks($engine, $asset, 60);
 
-            $this->command->line("  Seeded {$asset->symbol} with 60 initial ticks @ {$asset->formatPrice()}");
+            $this->command?->line("  Seeded {$asset->symbol} with 60 initial ticks @ {$asset->formatPrice()}");
         }
     }
 

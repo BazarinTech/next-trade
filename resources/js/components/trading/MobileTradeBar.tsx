@@ -67,7 +67,7 @@ export function MobileTradeBar({ asset, currentPrice, balance, walletMode, onTra
                     try { localStorage.setItem('nt_panel_collapsed', next ? '0' : '1'); } catch {}
                     return next;
                 })}
-                style={{ width: '100%', padding: '6px 16px', background: 'transparent', border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'space-between', borderBottom: expanded ? '1px solid #1f2937' : 'none' }}
+                style={{ width: '100%', padding: '5px 12px', background: 'transparent', border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'space-between', borderBottom: expanded ? '1px solid #1f2937' : 'none' }}
             >
                 <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
                     <span style={{ fontSize: 10, color: '#6b7280' }}>Stake</span>
@@ -87,7 +87,7 @@ export function MobileTradeBar({ asset, currentPrice, balance, walletMode, onTra
 
             {/* Expandable controls */}
             {expanded && (
-                <div style={{ padding: '10px 12px', display: 'flex', flexDirection: 'column', gap: 8 }}>
+                <div style={{ padding: '7px 12px', display: 'flex', flexDirection: 'column', gap: 6 }}>
 
                     {/* Balance + mode */}
                     <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>

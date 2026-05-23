@@ -57,6 +57,9 @@
     <style>
         [x-cloak] { display: none !important; }
         html, body { margin: 0; padding: 0; height: 100%; overflow: hidden; background: #030712; color: white; font-family: 'Inter', system-ui, sans-serif; }
+        /* dvh = dynamic viewport height — excludes mobile browser chrome (address bar + nav bar).
+           Falls back gracefully: browsers without dvh support keep the 100% rule above. */
+        html { height: 100dvh; }
         *, *::before, *::after { box-sizing: border-box; }
         * { scrollbar-width: thin; scrollbar-color: rgba(6,182,212,0.35) transparent; }
         ::-webkit-scrollbar { width: 4px; height: 4px; }
@@ -99,7 +102,7 @@
         }
     @endphp
 
-    <div x-data="{ sidebarOpen: false, isDark: true }" style="display:flex; flex-direction:column; height:100vh; overflow:hidden;">
+    <div x-data="{ sidebarOpen: false, isDark: true }" style="display:flex; flex-direction:column; height:100%; overflow:hidden;">
 
         <!-- ── Mobile Sidebar Overlay ─────────────────────────────────── -->
         <div>

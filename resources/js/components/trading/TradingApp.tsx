@@ -49,7 +49,7 @@ export function TradingApp({
     const isMobile = useMQ('(max-width: 767px)');  // phone
     const isTablet = useMQ('(max-width: 1023px)'); // phone + tablet
 
-    const [selected,     setSelected]     = useState<TradeAsset>(assets[0]);
+    const [selected,     setSelected]     = useState<TradeAsset | null>(assets[0] ?? null);
     const [timeframe,    setTimeframe]    = useState<Timeframe>(15);
     const [balance,      setBalance]      = useState(initialBalance);
     const [active,       setActive]       = useState<Trade[]>(initialActive);
@@ -181,12 +181,25 @@ export function TradingApp({
     // ─── Chart wrapper ────────────────────────────────────────────────────────
     const chart = (
         <TradingChart
-            key={`chart-${selected?.id ?? 0}-${timeframe}`}
+            key={`chart-${selected.id}-${timeframe}`}
             asset={selected}
             timeframe={timeframe}
             activeTrades={assetActiveTrades}
         />
     );
+
+    // ─── Guard: no assets seeded yet ─────────────────────────────────────────
+    if (!selected) {
+        return (
+            <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', height: '100%', gap: 12, color: '#6b7280' }}>
+                <svg style={{ width: 36, height: 36, color: '#374151' }} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6"/>
+                </svg>
+                <p style={{ fontSize: 13, margin: 0 }}>No trading assets available.</p>
+                <p style={{ fontSize: 11, margin: 0, color: '#4b5563' }}>Please contact the administrator.</p>
+            </div>
+        );
+    }
 
     // ═══════════════════════════════════════════════════════════════════════════
     // MOBILE layout  (< 768px)

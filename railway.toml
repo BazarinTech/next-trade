@@ -1,0 +1,2 @@
+[deploy]
+deployCommand = "php artisan migrate --force && php artisan db:seed --force && php artisan db:seed --class=RolesAndPermissionsSeeder --force && php artisan optimize"

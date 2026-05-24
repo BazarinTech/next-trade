@@ -70,6 +70,44 @@ class AdminDepositController extends Controller
         return view('admin.deposits.show', compact('deposit'));
     }
 
+    public function approveMpesa(Request $request, PaymentDeposit $deposit): RedirectResponse
+    {
+        if ($deposit->method !== 'mpesa') {
+            return back()->with('error', 'This deposit is not an M-Pesa deposit.');
+        }
+
+        if (!$deposit->isPending()) {
+            return back()->with('error', 'Deposit is already ' . $deposit->status . '. Cannot approve.');
+        }
+
+        try {
+            $deposit = $this->depositService->approveMpesaDeposit(
+                $deposit,
+                auth()->user(),
+                $request->input('admin_notes') ?: null
+            );
+
+            $this->logger->log(
+                auth()->user(),
+                'mpesa_deposit_approved',
+                PaymentDeposit::class,
+                $deposit->id,
+                ['status' => 'pending'],
+                ['status' => 'successful', 'usd_amount' => $deposit->usd_amount]
+            );
+
+            $this->notifier->send($deposit->user, 'deposit_successful', 'Deposit Approved',
+                'Your M-Pesa deposit of $' . number_format($deposit->usd_amount, 2) . ' has been approved and credited to your wallet.',
+                ['deposit_id' => $deposit->id]);
+
+            return redirect()
+                ->route('admin.deposits.show', $deposit)
+                ->with('success', 'M-Pesa deposit approved. $' . number_format($deposit->usd_amount, 2) . ' credited to wallet.');
+        } catch (RuntimeException $e) {
+            return back()->with('error', $e->getMessage());
+        }
+    }
+
     public function approveUsdt(Request $request, PaymentDeposit $deposit): RedirectResponse
     {
         if ($deposit->method !== 'crypto_usdt_trc20') {

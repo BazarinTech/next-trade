@@ -88,6 +88,20 @@
         </div>
         @endif
 
+        {{-- Admin actions for pending M-Pesa deposits --}}
+        @if($deposit->method === 'mpesa' && $deposit->isPending())
+        <div class="p-4 border-t flex items-center gap-3" :class="isDark ? 'border-gray-800/60' : 'border-gray-100'">
+            <button @click="showApprove = true"
+                    class="flex items-center gap-2 px-4 py-2.5 rounded-xl text-sm font-semibold text-white transition-all"
+                    style="background: linear-gradient(135deg,#10b981,#059669); box-shadow: 0 4px 12px rgba(16,185,129,0.2)">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>
+                Manually Approve
+            </button>
+            <span class="text-xs text-amber-400 ml-2">Use only if M-Pesa callback did not arrive automatically.</span>
+            <span class="text-xs text-gray-500 ml-auto">Wallet: {{ $deposit->wallet?->available_balance ? '$'.number_format($deposit->wallet->available_balance, 2) : '—' }}</span>
+        </div>
+        @endif
+
         @if($deposit->isCredited())
         <div class="p-4 border-t" :class="isDark ? 'border-gray-800/60' : 'border-gray-100'">
             <div class="flex items-center gap-2 p-3 rounded-xl bg-emerald-500/10 border border-emerald-500/20">
@@ -307,21 +321,31 @@
                     <svg class="w-5 h-5 text-emerald-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>
                 </div>
                 <div>
-                    <p class="text-sm font-bold" :class="isDark ? 'text-white' : 'text-gray-900'">Approve USDT Deposit</p>
+                    <p class="text-sm font-bold" :class="isDark ? 'text-white' : 'text-gray-900'">
+                        @if($deposit->method === 'mpesa') Manually Approve M-Pesa @else Approve USDT Deposit @endif
+                    </p>
                     <p class="text-xs text-gray-500">This will credit ${{ number_format($deposit->usd_amount, 2) }} to the {{ $deposit->wallet_type }} wallet.</p>
                 </div>
             </div>
 
+            @if($deposit->isUsdtDeposit())
             <div class="p-3 rounded-xl bg-amber-500/8 border border-amber-500/20 mb-4">
                 <p class="text-xs text-amber-400">Confirm TXID: <span class="font-mono font-semibold">{{ Str::limit($deposit->txid, 40) }}</span></p>
             </div>
+            @else
+            <div class="p-3 rounded-xl bg-amber-500/8 border border-amber-500/20 mb-4">
+                <p class="text-xs text-amber-400">Only approve if you have confirmed payment receipt. This action cannot be undone.</p>
+            </div>
+            @endif
 
-            <form method="POST" action="{{ route('admin.deposits.approve-usdt', $deposit) }}"
+            <form method="POST"
+                  action="{{ $deposit->method === 'mpesa' ? route('admin.deposits.approve-mpesa', $deposit) : route('admin.deposits.approve-usdt', $deposit) }}"
                   @submit="$el.querySelector('button[type=submit]').disabled = true">
                 @csrf
                 <div class="mb-4">
                     <label class="block text-xs font-medium text-gray-400 mb-1.5">Admin Notes (optional)</label>
-                    <textarea name="admin_notes" rows="2" placeholder="e.g. TXID verified on TronScan"
+                    <textarea name="admin_notes" rows="2"
+                              placeholder="{{ $deposit->method === 'mpesa' ? 'e.g. Confirmed via M-Pesa statement' : 'e.g. TXID verified on TronScan' }}"
                               class="w-full px-3 py-2 text-xs rounded-xl border bg-transparent focus:outline-none focus:ring-1 focus:ring-emerald-500/50 resize-none"
                               :class="isDark ? 'border-gray-700 text-white placeholder-gray-600' : 'border-gray-300 text-gray-900'"></textarea>
                 </div>

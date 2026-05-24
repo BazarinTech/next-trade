@@ -347,6 +347,69 @@ class DepositService
         });
     }
 
+    public function approveMpesaDeposit(
+        PaymentDeposit $deposit,
+        User           $admin,
+        ?string        $notes = null
+    ): PaymentDeposit {
+        if ($deposit->method !== 'mpesa') {
+            throw new RuntimeException('This deposit is not an M-Pesa deposit.');
+        }
+
+        if (!$deposit->isPending()) {
+            throw new RuntimeException('Deposit is already ' . $deposit->status . '. Cannot approve.');
+        }
+
+        return DB::transaction(function () use ($deposit, $admin, $notes) {
+            $deposit = PaymentDeposit::lockForUpdate()->find($deposit->id);
+
+            if ($deposit->isCredited()) {
+                throw new RuntimeException('This deposit has already been credited. Double-approval prevented.');
+            }
+
+            if (!$deposit->isPending()) {
+                throw new RuntimeException('Deposit status changed to ' . $deposit->status . '. Cannot approve.');
+            }
+
+            $this->walletService->credit(
+                $deposit->wallet,
+                (float) $deposit->usd_amount,
+                'deposit',
+                "M-Pesa Deposit: KES {$deposit->local_amount} — manual admin approval",
+                [
+                    'deposit_id'        => $deposit->id,
+                    'account_reference' => $deposit->account_reference,
+                    'credited_source'   => 'admin_mpesa_approval',
+                ]
+            );
+
+            $deposit->update([
+                'status'          => 'successful',
+                'provider_status' => 'SUCCESS',
+                'credited_at'     => now(),
+                'reviewed_by'     => $admin->id,
+                'reviewed_at'     => now(),
+                'admin_notes'     => $notes,
+                'metadata'        => array_merge($deposit->metadata ?? [], [
+                    'credited_source' => 'admin_mpesa_approval',
+                    'approved_by'     => $admin->id,
+                ]),
+            ]);
+
+            Log::info('M-Pesa deposit manually approved', [
+                'deposit_id' => $deposit->id,
+                'admin_id'   => $admin->id,
+                'usd_amount' => $deposit->usd_amount,
+            ]);
+
+            $fresh = $deposit->fresh();
+
+            $this->referralService->processDepositCommission($fresh);
+
+            return $fresh;
+        });
+    }
+
     public function approveUsdtDeposit(
         PaymentDeposit $deposit,
         User           $admin,

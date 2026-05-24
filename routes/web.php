@@ -198,8 +198,9 @@ Route::middleware(['auth', 'admin'])->prefix('admin')->name('admin.')->group(fun
         Route::get('/deposits/{deposit}',  [AdminDepositController::class, 'show'])->name('deposits.show');
     });
     Route::middleware('permission:manage_deposits')->group(function () {
-        Route::post('/deposits/{deposit}/approve-usdt', [AdminDepositController::class, 'approveUsdt'])->name('deposits.approve-usdt');
-        Route::post('/deposits/{deposit}/reject-usdt',  [AdminDepositController::class, 'rejectUsdt'])->name('deposits.reject-usdt');
+        Route::post('/deposits/{deposit}/approve-mpesa', [AdminDepositController::class, 'approveMpesa'])->name('deposits.approve-mpesa');
+        Route::post('/deposits/{deposit}/approve-usdt',  [AdminDepositController::class, 'approveUsdt'])->name('deposits.approve-usdt');
+        Route::post('/deposits/{deposit}/reject-usdt',   [AdminDepositController::class, 'rejectUsdt'])->name('deposits.reject-usdt');
     });
 
     // ── Withdrawals ────────────────────────────────────────────────────────

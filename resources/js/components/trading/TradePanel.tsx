@@ -281,8 +281,6 @@ export function TradePanel({ asset, currentPrice, balance, walletMode, onTradePl
                         )}
                     </button>
                 </div>
-
-                <p className="text-[10px] text-center text-gray-700">Educational simulation — no real funds</p>
             </div>
         </div>
     );

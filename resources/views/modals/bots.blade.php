@@ -7,7 +7,7 @@
             <h2 style="font-size:15px;font-weight:700;color:white;margin:0;" x-show="selectedPlan" x-cloak>
                 Invest in <span x-text="selectedPlan?.name"></span>
             </h2>
-            <p style="font-size:11px;color:#6b7280;margin:2px 0 0;" x-show="!selectedPlan">Educational simulation · {{ ucfirst($walletMode) }} wallet</p>
+            <p style="font-size:11px;color:#6b7280;margin:2px 0 0;" x-show="!selectedPlan">Auto trade · {{ ucfirst($walletMode) }} wallet</p>
             <p style="font-size:11px;color:#6b7280;margin:2px 0 0;" x-show="selectedPlan" x-cloak>{{ ucfirst($walletMode) }} Wallet · ${{ number_format($wallet->available_balance, 2) }} available</p>
         </div>
         <div style="display:flex;align-items:center;gap:6px;">

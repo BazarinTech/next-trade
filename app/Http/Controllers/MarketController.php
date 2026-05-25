@@ -41,9 +41,9 @@ class MarketController extends Controller
 
     public function ticks(TradingAsset $asset): JsonResponse
     {
-        // Seed initial history if table is empty
+        // Seed initial history if table is empty (600 ticks ≈ 30 min backdated)
         if ($asset->priceTicks()->count() < 2) {
-            $this->engine->generateTicksForAsset($asset, 60);
+            $this->engine->generateTicksForAsset($asset, 600);
             $asset->refresh();
         }
 
@@ -53,15 +53,15 @@ class MarketController extends Controller
             $this->engine->generateNextTick($asset);
         }
 
-        // Prune ticks older than 30 minutes to keep the table lean
+        // Prune ticks older than 2 hours
         $asset->priceTicks()
-            ->where('tick_time', '<', now()->subMinutes(30))
+            ->where('tick_time', '<', now()->subHours(2))
             ->delete();
 
-        // Return the 300 most recent ticks in ascending order for the chart
+        // Return the 2400 most recent ticks in ascending order for the chart
         $ticks = $asset->priceTicks()
             ->orderByDesc('tick_time')
-            ->limit(300)
+            ->limit(2400)
             ->get()
             ->sortBy('tick_time')
             ->values()
